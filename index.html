@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>แบ่งหารบิล - Bill Splitter</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="container">
+      <!-- Header -->
+      <header class="header">
+        <h1>💰 แบ่งหารบิล</h1>
+        <p>Bill Splitter</p>
+      </header>
+
+      <!-- Main Content -->
+      <main class="main-content">
+        <!-- Add Expense Section -->
+        <section
+          class="section add-expense-section"
+          aria-labelledby="addExpenseHeading"
+        >
+          <h2 id="addExpenseHeading">เพิ่มรายการใหม่</h2>
+          <form id="expenseForm" class="form" autocomplete="off">
+            <div class="form-group">
+              <label for="expenseName">ชื่อรายการ</label>
+              <input
+                type="text"
+                id="expenseName"
+                placeholder="เช่น อาหาร, ที่พัก..."
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label id="subExpensesLabel">รายการย่อย</label>
+              <p id="subExpensesHint" class="form-hint">
+                ไม่บังคับเพิ่ม หากไม่มีรายการย่อยสามารถกรอกยอดรวมรายการเองได้
+              </p>
+              <button
+                type="button"
+                id="toggleSubExpensesBtn"
+                class="btn btn-small btn-secondary add-sub-expense-btn accordion-toggle"
+                aria-expanded="false"
+                aria-controls="subExpensesPanel"
+                aria-describedby="subExpensesHint"
+              >
+                <span class="accordion-toggle-content">
+                  <span class="accordion-toggle-text">เพิ่มรายการย่อย</span>
+                  <span class="accordion-toggle-summary"
+                    >ยังไม่มีรายการย่อย</span
+                  >
+                </span>
+                <span class="accordion-toggle-icon" aria-hidden="true">▾</span>
+              </button>
+              <div
+                id="subExpensesPanel"
+                class="sub-expenses-panel is-hidden"
+                aria-hidden="true"
+                role="region"
+                aria-labelledby="subExpensesLabel toggleSubExpensesBtn"
+                aria-describedby="subExpensesHint"
+              >
+                <div id="subExpenses" class="sub-expenses-list"></div>
+                <div class="sub-expense-actions">
+                  <button
+                    type="button"
+                    id="addSubExpenseBtn"
+                    class="btn btn-small btn-secondary"
+                  >
+                    + เพิ่มรายการย่อยอีกบรรทัด
+                  </button>
+                  <button
+                    type="button"
+                    id="clearSubExpensesBtn"
+                    class="btn btn-small btn-clear-sub-expenses"
+                  >
+                    ล้างรายการย่อยทั้งหมด
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group expense-total-group">
+              <label for="expenseTotal">ยอดรวมรายการ</label>
+              <input
+                type="number"
+                id="expenseTotal"
+                placeholder="0.00"
+                min="0"
+                step="0.01"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="paidBy">ผู้จ่าย</label>
+              <select id="paidBy" required>
+                <option value="">-- เลือกผู้จ่าย --</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label id="splitPersonsLabel">แบ่งให้ (เลือกได้หลายคน)</label>
+              <div class="split-buttons">
+                <button
+                  type="button"
+                  id="selectAllBtn"
+                  class="btn btn-small btn-secondary"
+                >
+                  เลือกทั้งหมด
+                </button>
+                <button
+                  type="button"
+                  id="deselectAllBtn"
+                  class="btn btn-small btn-secondary"
+                >
+                  ยกเลิกทั้งหมด
+                </button>
+              </div>
+              <div
+                id="splitPersons"
+                class="checkbox-group"
+                role="group"
+                aria-labelledby="splitPersonsLabel"
+              >
+                <!-- Will be populated by JavaScript -->
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary">เพิ่มรายการ</button>
+          </form>
+        </section>
+
+        <!-- Add Person Section -->
+        <section
+          class="section add-person-section"
+          aria-labelledby="addPersonHeading"
+        >
+          <h2 id="addPersonHeading">เพิ่มคนในกลุ่ม</h2>
+          <form id="personForm" class="form-inline">
+            <div class="form-group">
+              <input
+                type="text"
+                id="personName"
+                placeholder="ชื่อบุคคล"
+                required
+              />
+            </div>
+            <button type="submit" class="btn btn-secondary">เพิ่มคน</button>
+          </form>
+          <div id="personsList" class="persons-list" aria-live="polite">
+            <!-- Will be populated by JavaScript -->
+          </div>
+        </section>
+
+        <!-- Expenses List Section -->
+        <section
+          class="section expenses-section"
+          aria-labelledby="expensesHeading"
+        >
+          <h2 id="expensesHeading">รายการค่าใช้จ่าย</h2>
+          <div id="expensesList" class="expenses-list" aria-live="polite">
+            <!-- Will be populated by JavaScript -->
+          </div>
+          <p id="noExpenses" class="empty-message" role="status">
+            ยังไม่มีรายการใช้จ่าย
+          </p>
+        </section>
+
+        <!-- Summary Section -->
+        <section
+          class="section summary-section"
+          aria-labelledby="summaryHeading"
+        >
+          <h2 id="summaryHeading">สรุปการแบ่งหาร</h2>
+          <div id="summaryContent" class="summary-content" aria-live="polite">
+            <!-- Will be populated by JavaScript -->
+          </div>
+        </section>
+
+        <!-- Settlement Section -->
+        <section
+          class="section settlement-section"
+          aria-labelledby="settlementHeading"
+        >
+          <h2 id="settlementHeading">วิธีแบ่งหาร (ใครต้องจ่ายให้ใคร)</h2>
+          <div
+            id="settlementContent"
+            class="settlement-content"
+            aria-live="polite"
+          >
+            <!-- Will be populated by JavaScript -->
+          </div>
+          <p id="noSettlement" class="empty-message" role="status">
+            ตอนนี้ยังไม่มีรายการที่ต้องชำระกัน
+          </p>
+        </section>
+
+        <section class="section share-section" aria-labelledby="shareHeading">
+          <h2 id="shareHeading">แชร์ทริป</h2>
+          <div id="tripStatusBar" class="trip-status-bar" aria-live="polite">
+            <span
+              id="tripModeBadge"
+              class="trip-mode-badge trip-mode-badge-local"
+              >โหมดในเครื่อง</span
+            >
+            <span id="saveStatusText" class="save-status">ยังไม่ได้แชร์</span>
+          </div>
+          <p id="shareHint" class="form-hint share-hint">
+            รอบนี้เตรียมโครงสำหรับแชร์ทริปและโหมดดูอย่างเดียวไว้ก่อน
+            แล้วค่อยเชื่อม Supabase ในขั้นถัดไป
+          </p>
+          <p
+            id="shareErrorState"
+            class="share-notice share-notice-error is-hidden"
+            role="alert"
+          ></p>
+          <div
+            id="remoteUpdateNotice"
+            class="share-notice share-notice-warning is-hidden"
+          >
+            <div class="share-notice-copy">
+              <strong>มีข้อมูลใหม่บนเซิร์ฟเวอร์</strong>
+              <span>โปรดโหลด snapshot ล่าสุดก่อนบันทึกต่อ</span>
+            </div>
+            <button
+              id="reloadLatestBtn"
+              type="button"
+              class="btn btn-small btn-secondary"
+            >
+              Reload latest
+            </button>
+          </div>
+          <div class="share-actions">
+            <button
+              id="shareTripBtn"
+              type="button"
+              class="btn btn-secondary"
+              aria-describedby="shareHint"
+            >
+              สร้างลิงก์แชร์
+            </button>
+            <button
+              id="copyViewLinkBtn"
+              type="button"
+              class="btn btn-secondary"
+              disabled
+              aria-describedby="shareHint"
+            >
+              คัดลอกลิงก์ดูอย่างเดียว
+            </button>
+            <button
+              id="copyEditLinkBtn"
+              type="button"
+              class="btn btn-secondary"
+              disabled
+              aria-describedby="shareHint"
+            >
+              คัดลอกลิงก์แก้ไข
+            </button>
+          </div>
+        </section>
+
+        <!-- Actions -->
+        <section class="section actions-section" aria-label="การจัดการข้อมูล">
+          <button id="resetBtn" class="btn btn-danger">รีเซ็ตทั้งหมด</button>
+        </section>
+      </main>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
