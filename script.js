@@ -13,6 +13,7 @@ const REALTIME_SYNC_EVENT = "trip-updated";
 const PROJECT_NAME = "หารกัน";
 const DEFAULT_TRIP_TITLE = "แบ่งหารบิล";
 const SHORTCUT_SCROLL_DURATION_MS = 2400;
+const DEFAULT_OPEN_OWED_BALANCE_THRESHOLD = -500;
 
 const appState = {
   mode: "local",
@@ -102,10 +103,85 @@ function bindEvents() {
   );
   dom.subExpensesContainer.addEventListener("input", handleSubExpenseInput);
   dom.subExpensesContainer.addEventListener("click", handleSubExpenseAction);
+  dom.summaryContent.addEventListener("click", handleSummaryDetailToggle);
   dom.shareTripBtn.addEventListener("click", handleShareTripClick);
   dom.copyViewLinkBtn.addEventListener("click", handleCopyViewLinkClick);
   dom.copyEditLinkBtn.addEventListener("click", handleCopyEditLinkClick);
   dom.reloadLatestBtn.addEventListener("click", handleReloadLatestClick);
+}
+
+function handleSummaryDetailToggle(event) {
+  const summary = event.target.closest(".summary-detail-summary");
+
+  if (!summary || !dom.summaryContent.contains(summary)) {
+    return;
+  }
+
+  const details = summary.closest(".summary-detail-section");
+  const content = details?.querySelector(".summary-detail-content");
+
+  if (!details || !content || details.dataset.animating === "true") {
+    return;
+  }
+
+  event.preventDefault();
+
+  if (details.hasAttribute("open")) {
+    collapseSummaryDetail(details, content);
+    return;
+  }
+
+  expandSummaryDetail(details, content);
+}
+
+function expandSummaryDetail(details, content) {
+  details.dataset.animating = "true";
+  details.setAttribute("open", "");
+  content.style.height = "0px";
+  content.style.opacity = "0";
+
+  requestAnimationFrame(() => {
+    content.style.height = `${content.scrollHeight}px`;
+    content.style.opacity = "1";
+  });
+
+  const cleanup = (event) => {
+    if (event.target !== content || event.propertyName !== "height") {
+      return;
+    }
+
+    content.style.height = "auto";
+    content.style.opacity = "";
+    delete details.dataset.animating;
+    content.removeEventListener("transitionend", cleanup);
+  };
+
+  content.addEventListener("transitionend", cleanup);
+}
+
+function collapseSummaryDetail(details, content) {
+  details.dataset.animating = "true";
+  content.style.height = `${content.scrollHeight}px`;
+  content.style.opacity = "1";
+
+  requestAnimationFrame(() => {
+    content.style.height = "0px";
+    content.style.opacity = "0";
+  });
+
+  const cleanup = (event) => {
+    if (event.target !== content || event.propertyName !== "height") {
+      return;
+    }
+
+    details.removeAttribute("open");
+    content.style.height = "";
+    content.style.opacity = "";
+    delete details.dataset.animating;
+    content.removeEventListener("transitionend", cleanup);
+  };
+
+  content.addEventListener("transitionend", cleanup);
 }
 
 function handleShortcutClick(event) {
@@ -847,13 +923,15 @@ function updateSummary() {
 }
 
 function createSummaryCardMarkup(person, stats, details) {
+  const shouldOpenOwedSection = shouldOpenOwedSectionByDefault(stats);
+
   return `
       <div class="summary-card-header">
         <div class="summary-person-name">${person}</div>
       </div>
       <div class="summary-card-body">
             ${buildDetailSectionMarkup("💵 จ่ายแล้ว", stats.paid, details.paid, (item) => `${item.name}: ${formatAmount(item.amount)} บาท (แบ่ง ${item.count} คน)`, "paid")}
-            ${buildDetailSectionMarkup("💸 ต้องจ่าย", stats.owed, details.owed, (item) => `${item.name}: ${formatAmount(item.amount)} บาท`, "owed")}
+            ${buildDetailSectionMarkup("💸 ต้องจ่าย", stats.owed, details.owed, (item) => `${item.name}: ${formatAmount(item.amount)} บาท`, "owed", shouldOpenOwedSection)}
       </div>
             <hr class="summary-divider">
       <div class="summary-balance-row">
@@ -865,13 +943,26 @@ function createSummaryCardMarkup(person, stats, details) {
         `;
 }
 
-function buildDetailSectionMarkup(title, totalAmount, items, formatter, tone) {
-  const itemCountLabel = items.length === 1 ? "1 รายการ" : `${items.length} รายการ`;
+function shouldOpenOwedSectionByDefault(stats) {
+  return stats.balance <= DEFAULT_OPEN_OWED_BALANCE_THRESHOLD && stats.owed > 0;
+}
+
+function buildDetailSectionMarkup(
+  title,
+  totalAmount,
+  items,
+  formatter,
+  tone,
+  defaultOpen = false,
+) {
+  const itemCountLabel =
+    items.length === 1 ? "1 รายการ" : `${items.length} รายการ`;
   const toneClass = tone ? ` summary-detail-section-${tone}` : "";
+  const openAttribute = defaultOpen ? " open" : "";
 
   if (items.length === 0) {
     return `
-      <details class="summary-detail-section${toneClass}">
+      <details class="summary-detail-section${toneClass}"${openAttribute}>
         <summary class="summary-detail-summary">
           <div class="summary-detail-summary-main">
             <span class="summary-detail-title">${title}</span>
@@ -882,21 +973,21 @@ function buildDetailSectionMarkup(title, totalAmount, items, formatter, tone) {
           </div>
           <span class="summary-detail-count">ยังไม่มี</span>
         </summary>
-        <div class="summary-detail-list">
-          <div class="summary-detail-empty">ยังไม่มี</div>
+        <div class="summary-detail-content">
+          <div class="summary-detail-list">
+            <div class="summary-detail-empty">ยังไม่มี</div>
+          </div>
         </div>
       </details>
     `;
   }
 
   const itemsMarkup = items
-    .map(
-      (item) => `<div class="summary-detail-item">${formatter(item)}</div>`,
-    )
+    .map((item) => `<div class="summary-detail-item">${formatter(item)}</div>`)
     .join("");
 
   return `
-    <details class="summary-detail-section${toneClass}">
+    <details class="summary-detail-section${toneClass}"${openAttribute}>
       <summary class="summary-detail-summary">
         <div class="summary-detail-summary-main">
           <span class="summary-detail-title">${title}</span>
@@ -907,7 +998,9 @@ function buildDetailSectionMarkup(title, totalAmount, items, formatter, tone) {
         </div>
         <span class="summary-detail-count">${itemCountLabel}</span>
       </summary>
-      <div class="summary-detail-list">${itemsMarkup}</div>
+      <div class="summary-detail-content">
+        <div class="summary-detail-list">${itemsMarkup}</div>
+      </div>
     </details>
   `;
 }
