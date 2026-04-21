@@ -1,4 +1,5 @@
 const data = {
+  title: "แบ่งหารบิล",
   persons: [],
   expenses: [],
 };
@@ -9,6 +10,8 @@ const SUPABASE_PROJECT_URL = "https://edpcqatatjkfgjxnogvq.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY =
   "sb_publishable_j41m4XEbr49hZSehREyKsw_xsvko8E_";
 const REALTIME_SYNC_EVENT = "trip-updated";
+const PROJECT_NAME = "หารกัน";
+const DEFAULT_TRIP_TITLE = "แบ่งหารบิล";
 
 const appState = {
   mode: "local",
@@ -40,6 +43,11 @@ let supabaseModulePromise = null;
 const dom = {
   personForm: document.getElementById("personForm"),
   personNameInput: document.getElementById("personName"),
+  tripTitleInput: document.getElementById("tripTitleInput"),
+  overviewPersonsCount: document.getElementById("overviewPersonsCount"),
+  overviewExpensesCount: document.getElementById("overviewExpensesCount"),
+  overviewTotalAmount: document.getElementById("overviewTotalAmount"),
+  overviewModeText: document.getElementById("overviewModeText"),
   personsList: document.getElementById("personsList"),
   expenseForm: document.getElementById("expenseForm"),
   expenseNameInput: document.getElementById("expenseName"),
@@ -74,6 +82,8 @@ const dom = {
 function bindEvents() {
   dom.personForm.addEventListener("submit", addPerson);
   dom.expenseForm.addEventListener("submit", addExpense);
+  dom.tripTitleInput.addEventListener("input", handleTripTitleInput);
+  dom.tripTitleInput.addEventListener("blur", normalizeTripTitleInput);
   dom.resetBtn.addEventListener("click", resetAll);
   dom.selectAllBtn.addEventListener("click", selectAllPersons);
   dom.deselectAllBtn.addEventListener("click", deselectAllPersons);
@@ -89,6 +99,34 @@ function bindEvents() {
   dom.copyViewLinkBtn.addEventListener("click", handleCopyViewLinkClick);
   dom.copyEditLinkBtn.addEventListener("click", handleCopyEditLinkClick);
   dom.reloadLatestBtn.addEventListener("click", handleReloadLatestClick);
+}
+
+function getTripTitle() {
+  return typeof data.title === "string" ? data.title : "";
+}
+
+function getNormalizedTripTitle() {
+  return getTripTitle().trim();
+}
+
+function setTripTitle(nextTitle) {
+  data.title = typeof nextTitle === "string" ? nextTitle : "";
+}
+
+function handleTripTitleInput(event) {
+  if (!assertEditableOrAlert()) {
+    event.target.value = getTripTitle();
+    return;
+  }
+
+  setTripTitle(event.target.value);
+  updateHeaderUI();
+  markDirty();
+}
+
+function normalizeTripTitleInput() {
+  setTripTitle(dom.tripTitleInput.value.trim() || DEFAULT_TRIP_TITLE);
+  updateHeaderUI();
 }
 
 function addPerson(event) {
@@ -237,6 +275,7 @@ function resetAll() {
     return;
   }
 
+  data.title = DEFAULT_TRIP_TITLE;
   data.persons = [];
   data.expenses = [];
   dom.personForm.reset();
@@ -522,6 +561,8 @@ function escapeQuotes(str) {
 }
 
 function updateUI() {
+  updateHeaderUI();
+  updateOverviewUI();
   updatePersonsList();
   updateCheckboxes();
   updatePaidBySelect();
@@ -530,6 +571,36 @@ function updateUI() {
   updateSettlement();
   applyReadOnlyUI(!canEdit());
   updateShareUI();
+}
+
+function updateHeaderUI() {
+  const tripTitle = getTripTitle();
+  const normalizedTripTitle = getNormalizedTripTitle() || DEFAULT_TRIP_TITLE;
+  dom.tripTitleInput.value = tripTitle;
+  document.title = `${normalizedTripTitle} - ${PROJECT_NAME}`;
+}
+
+function updateOverviewUI() {
+  const totalAmount = roundCurrency(
+    data.expenses.reduce((sum, expense) => sum + expense.amount, 0),
+  );
+
+  dom.overviewPersonsCount.textContent = String(data.persons.length);
+  dom.overviewExpensesCount.textContent = String(data.expenses.length);
+  dom.overviewTotalAmount.textContent = formatAmount(totalAmount);
+  dom.overviewModeText.textContent = getOverviewModeText();
+}
+
+function getOverviewModeText() {
+  if (appState.mode === "shared-edit") {
+    return "แก้ไขร่วมกัน";
+  }
+
+  if (appState.mode === "shared-view") {
+    return "ดูอย่างเดียว";
+  }
+
+  return "โหมดในเครื่อง";
 }
 
 function updatePersonsList() {
@@ -827,8 +898,11 @@ function updateSettlement() {
 }
 
 function exportTripData() {
+  const normalizedTripTitle = getNormalizedTripTitle();
+
   return {
     schemaVersion: TRIP_SCHEMA_VERSION,
+    ...(normalizedTripTitle ? { title: normalizedTripTitle } : {}),
     persons: [...data.persons],
     expenses: data.expenses.map((expense) => ({
       id: expense.id,
@@ -857,6 +931,10 @@ function validateTripDataShape(rawData) {
 
   if (rawData.schemaVersion !== TRIP_SCHEMA_VERSION) {
     throw new Error("UNSUPPORTED_TRIP_SCHEMA");
+  }
+
+  if (rawData.title !== undefined && typeof rawData.title !== "string") {
+    throw new Error("INVALID_TRIP_DATA");
   }
 
   if (!Array.isArray(rawData.persons) || !Array.isArray(rawData.expenses)) {
@@ -905,6 +983,7 @@ function validateTripDataShape(rawData) {
 function normalizeTripData(rawData) {
   return {
     schemaVersion: TRIP_SCHEMA_VERSION,
+    title: typeof rawData.title === "string" ? rawData.title.trim() : "",
     persons: rawData.persons
       .map((person) => String(person).trim())
       .filter(Boolean),
@@ -926,6 +1005,7 @@ function normalizeTripData(rawData) {
 }
 
 function applyTripSnapshot(snapshot) {
+  data.title = snapshot.title;
   data.persons = [...snapshot.persons];
   data.expenses = snapshot.expenses.map((expense) => ({
     ...expense,
@@ -1030,6 +1110,7 @@ function applyReadOnlyUI(isReadOnly) {
   document.body.classList.toggle("is-readonly", isReadOnly);
 
   dom.personNameInput.disabled = isReadOnly;
+  dom.tripTitleInput.disabled = isReadOnly;
   dom.expenseNameInput.disabled = isReadOnly;
   dom.expenseTotalInput.disabled = isReadOnly;
   dom.paidBySelect.disabled = isReadOnly;
@@ -1519,7 +1600,7 @@ async function createSharedTrip() {
 
   try {
     const result = await postShareRequest("create-trip", {
-      title: null,
+      title: getNormalizedTripTitle() || null,
       data: exportTripData(),
     });
 
@@ -1611,6 +1692,7 @@ async function saveSharedTrip({ manual }) {
     const result = await postShareRequest("save-trip", {
       token: appState.shareToken,
       expectedVersion: appState.version,
+      title: getNormalizedTripTitle() || null,
       data: exportTripData(),
     });
 

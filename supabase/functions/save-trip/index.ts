@@ -24,6 +24,7 @@ Deno.serve(async (request) => {
     const body = await parseJsonBody(request);
     const token = typeof body.token === "string" ? body.token.trim() : "";
     const expectedVersion = Number(body.expectedVersion);
+    const title = typeof body.title === "string" ? body.title.trim() : null;
     const data = body.data;
 
     if (!token) {
@@ -75,6 +76,7 @@ Deno.serve(async (request) => {
     const updateResult = await adminClient
       .from("trips")
       .update({
+        title,
         data,
         version: expectedVersion + 1,
       })

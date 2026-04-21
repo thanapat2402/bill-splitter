@@ -17,6 +17,7 @@ export type TripExpense = {
 
 export type TripSnapshot = {
   schemaVersion: number;
+  title?: string;
   persons: string[];
   expenses: TripExpense[];
 };
@@ -34,7 +35,9 @@ export function roundCurrency(amount: number) {
   return Math.round(amount * 100) / 100;
 }
 
-export function validateTripSnapshot(data: unknown): asserts data is TripSnapshot {
+export function validateTripSnapshot(
+  data: unknown,
+): asserts data is TripSnapshot {
   if (!isRecord(data)) {
     throw new Error("INVALID_TRIP_DATA");
   }
@@ -43,11 +46,23 @@ export function validateTripSnapshot(data: unknown): asserts data is TripSnapsho
     throw new Error("UNSUPPORTED_TRIP_SCHEMA");
   }
 
+  if (data.title !== undefined) {
+    if (typeof data.title !== "string" || !data.title.trim()) {
+      throw new Error("INVALID_TRIP_DATA");
+    }
+
+    if (data.title.trim().length > 120) {
+      throw new Error("INVALID_TRIP_DATA");
+    }
+  }
+
   if (!Array.isArray(data.persons) || !Array.isArray(data.expenses)) {
     throw new Error("INVALID_TRIP_DATA");
   }
 
-  const persons = data.persons.map((person) => String(person).trim()).filter(Boolean);
+  const persons = data.persons
+    .map((person) => String(person).trim())
+    .filter(Boolean);
   const personSet = new Set(persons);
 
   if (personSet.size !== persons.length) {
@@ -79,7 +94,9 @@ export function validateTripSnapshot(data: unknown): asserts data is TripSnapsho
       throw new Error("INVALID_TRIP_DATA");
     }
 
-    const subExpenses = Array.isArray(expense.subExpenses) ? expense.subExpenses : [];
+    const subExpenses = Array.isArray(expense.subExpenses)
+      ? expense.subExpenses
+      : [];
     const subExpenseTotal = roundCurrency(
       subExpenses.reduce((sum, item) => {
         if (!isRecord(item)) {
@@ -114,9 +131,9 @@ export async function hashToken(token: string) {
 export function generateShareToken() {
   const bytes = crypto.getRandomValues(new Uint8Array(32));
 
-  return Array.from(bytes, (byte) =>
-    byte.toString(16).padStart(2, "0"),
-  ).join("");
+  return Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join(
+    "",
+  );
 }
 
 export function isShareLinkActive(link: ShareLinkRecord) {

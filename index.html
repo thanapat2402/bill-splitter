@@ -3,16 +3,64 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>แบ่งหารบิล - Bill Splitter</title>
+    <title>แบ่งหารบิล - หารกัน</title>
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
     <div class="container">
       <!-- Header -->
       <header class="header">
-        <h1>💰 แบ่งหารบิล</h1>
-        <p>Bill Splitter</p>
+        <div class="header-brand-row">
+          <p class="header-brand">หารกัน</p>
+          <span class="header-tagline">แชร์บิล จบไว คุยกันง่ายขึ้น</span>
+        </div>
+        <div class="header-title-row" data-editable="true">
+          <span class="header-title-icon" aria-hidden="true">💰</span>
+          <input
+            type="text"
+            id="tripTitleInput"
+            class="header-title-input"
+            value="แบ่งหารบิล"
+            maxlength="120"
+            placeholder="ตั้งชื่อทริปนี้"
+            autocomplete="off"
+            spellcheck="false"
+            aria-label="ชื่อทริป"
+          />
+          <span class="header-title-edit-icon" aria-hidden="true">✎</span>
+        </div>
+        <p class="header-caption">แตะชื่อทริปเพื่อแก้ไขก่อนแชร์ลิงก์</p>
+        <nav class="header-shortcuts" aria-label="ทางลัด">
+          <a class="shortcut-chip" href="#addExpenseHeading">เพิ่มรายการ</a>
+          <a class="shortcut-chip" href="#summaryHeading">ดูสรุป</a>
+          <a class="shortcut-chip" href="#shareHeading">แชร์ทริป</a>
+        </nav>
       </header>
+
+      <section class="overview-strip" aria-label="ภาพรวมทริป">
+        <article class="overview-card">
+          <span class="overview-label">สมาชิก</span>
+          <strong id="overviewPersonsCount" class="overview-value">0</strong>
+          <span class="overview-meta">คนในทริปนี้</span>
+        </article>
+        <article class="overview-card">
+          <span class="overview-label">รายการ</span>
+          <strong id="overviewExpensesCount" class="overview-value">0</strong>
+          <span class="overview-meta">บิลที่บันทึกแล้ว</span>
+        </article>
+        <article class="overview-card overview-card-highlight">
+          <span class="overview-label">ยอดรวมทั้งหมด</span>
+          <strong id="overviewTotalAmount" class="overview-value">0.00</strong>
+          <span class="overview-meta">บาท</span>
+        </article>
+        <article class="overview-card">
+          <span class="overview-label">สถานะ</span>
+          <strong id="overviewModeText" class="overview-value"
+            >โหมดในเครื่อง</strong
+          >
+          <span class="overview-meta">พร้อมแชร์เมื่อคุณต้องการ</span>
+        </article>
+      </section>
 
       <!-- Main Content -->
       <main class="main-content">
@@ -22,6 +70,10 @@
           aria-labelledby="addExpenseHeading"
         >
           <h2 id="addExpenseHeading">เพิ่มรายการใหม่</h2>
+          <p class="section-description">
+            กรอกชื่อรายการ จำนวนเงิน และเลือกคนที่ต้องหาร
+            ระบบจะคำนวณสรุปให้ทันที
+          </p>
           <form id="expenseForm" class="form" autocomplete="off">
             <div class="form-group">
               <label for="expenseName">ชื่อรายการ</label>
@@ -82,23 +134,25 @@
               </div>
             </div>
 
-            <div class="form-group expense-total-group">
-              <label for="expenseTotal">ยอดรวมรายการ</label>
-              <input
-                type="number"
-                id="expenseTotal"
-                placeholder="0.00"
-                min="0"
-                step="0.01"
-                required
-              />
-            </div>
+            <div class="form-row form-row-split">
+              <div class="form-group expense-total-group">
+                <label for="expenseTotal">ยอดรวมรายการ</label>
+                <input
+                  type="number"
+                  id="expenseTotal"
+                  placeholder="0.00"
+                  min="0"
+                  step="0.01"
+                  required
+                />
+              </div>
 
-            <div class="form-group">
-              <label for="paidBy">ผู้จ่าย</label>
-              <select id="paidBy" required>
-                <option value="">-- เลือกผู้จ่าย --</option>
-              </select>
+              <div class="form-group">
+                <label for="paidBy">ผู้จ่าย</label>
+                <select id="paidBy" required>
+                  <option value="">-- เลือกผู้จ่าย --</option>
+                </select>
+              </div>
             </div>
 
             <div class="form-group">
@@ -139,6 +193,9 @@
           aria-labelledby="addPersonHeading"
         >
           <h2 id="addPersonHeading">เพิ่มคนในกลุ่ม</h2>
+          <p class="section-description">
+            เพิ่มสมาชิกก่อนเริ่มลงบิล เพื่อให้เลือกคนจ่ายและคนที่ต้องหารได้สะดวก
+          </p>
           <form id="personForm" class="form-inline">
             <div class="form-group">
               <input
@@ -200,6 +257,10 @@
 
         <section class="section share-section" aria-labelledby="shareHeading">
           <h2 id="shareHeading">แชร์ทริป</h2>
+          <p class="section-description">
+            เมื่อพร้อมแล้ว
+            สร้างลิงก์เพื่อให้คนอื่นเปิดดูหรือแก้ไขทริปร่วมกันได้ทันที
+          </p>
           <div id="tripStatusBar" class="trip-status-bar" aria-live="polite">
             <span
               id="tripModeBadge"
