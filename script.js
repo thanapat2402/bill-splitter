@@ -882,8 +882,20 @@ function createSummaryCardMarkup(person, stats, details) {
 }
 
 function buildDetailSectionMarkup(title, items, formatter) {
+  const itemCountLabel = items.length === 1 ? "1 รายการ" : `${items.length} รายการ`;
+
   if (items.length === 0) {
-    return `<div class="summary-detail-section"><strong class="summary-detail-title">${title}</strong><div class="summary-detail-empty">ยังไม่มี</div></div>`;
+    return `
+      <details class="summary-detail-section">
+        <summary class="summary-detail-summary">
+          <span class="summary-detail-title">${title}</span>
+          <span class="summary-detail-count">ยังไม่มี</span>
+        </summary>
+        <div class="summary-detail-list">
+          <div class="summary-detail-empty">ยังไม่มี</div>
+        </div>
+      </details>
+    `;
   }
 
   const itemsMarkup = items
@@ -892,7 +904,15 @@ function buildDetailSectionMarkup(title, items, formatter) {
     )
     .join("");
 
-  return `<div class="summary-detail-section"><strong class="summary-detail-title">${title}</strong><div class="summary-detail-list">${itemsMarkup}</div></div>`;
+  return `
+    <details class="summary-detail-section">
+      <summary class="summary-detail-summary">
+        <span class="summary-detail-title">${title}</span>
+        <span class="summary-detail-count">${itemCountLabel}</span>
+      </summary>
+      <div class="summary-detail-list">${itemsMarkup}</div>
+    </details>
+  `;
 }
 
 function getBalanceClass(balance) {

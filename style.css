@@ -902,11 +902,28 @@ body {
 .summary-detail-section {
   display: grid;
   gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid rgba(124, 98, 71, 0.1);
+  border-radius: 16px;
+  background: rgba(255, 251, 246, 0.72);
 }
 
 .summary-card-body {
   display: grid;
-  gap: 14px;
+  gap: 12px;
+}
+
+.summary-detail-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.summary-detail-summary::-webkit-details-marker {
+  display: none;
 }
 
 .summary-detail-title {
@@ -914,9 +931,33 @@ body {
   color: var(--text-dark);
 }
 
+.summary-detail-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: rgba(124, 98, 71, 0.1);
+  color: var(--text-light);
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.summary-detail-count::before {
+  content: "+";
+  font-size: 0.8rem;
+  line-height: 1;
+}
+
+.summary-detail-section[open] .summary-detail-count::before {
+  content: "-";
+}
+
 .summary-detail-list {
   display: grid;
   gap: 7px;
+  padding-top: 4px;
 }
 
 .summary-detail-item,
