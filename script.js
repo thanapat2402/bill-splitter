@@ -853,11 +853,17 @@ function createSummaryCardMarkup(person, stats, details) {
         <div class="summary-stats">
           <div class="summary-stat summary-stat-paid">
             <span class="summary-stat-label">💵 จ่ายแล้ว</span>
-            <strong class="summary-stat-amount">${formatAmount(stats.paid)} บาท</strong>
+            <div class="summary-stat-value">
+              <strong class="summary-stat-amount">${formatAmount(stats.paid)}</strong>
+              <span class="summary-stat-unit">บาท</span>
+            </div>
           </div>
           <div class="summary-stat summary-stat-owed">
             <span class="summary-stat-label">💸 ต้องจ่าย</span>
-            <strong class="summary-stat-amount">${formatAmount(stats.owed)} บาท</strong>
+            <div class="summary-stat-value">
+              <strong class="summary-stat-amount">${formatAmount(stats.owed)}</strong>
+              <span class="summary-stat-unit">บาท</span>
+            </div>
           </div>
         </div>
       </div>
