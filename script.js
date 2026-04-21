@@ -1406,7 +1406,7 @@ function handleRealtimeTripUpdate(payload) {
   }
 
   if (shouldAutoReloadRemoteUpdate(nextVersion)) {
-    void loadSharedTrip(appState.shareToken);
+    void loadSharedTrip(appState.shareToken, { backgroundSync: true });
     return;
   }
 
@@ -1584,6 +1584,11 @@ async function pollTripVersion() {
       typeof result.version === "number" &&
       result.version > (appState.version ?? 0)
     ) {
+      if (shouldAutoReloadRemoteUpdate(result.version)) {
+        void loadSharedTrip(appState.shareToken, { backgroundSync: true });
+        return;
+      }
+
       setRemoteUpdateState(true, result.version);
       clearAutosaveTimer();
       updateShareUI();
@@ -1629,11 +1634,13 @@ async function createSharedTrip() {
 }
 
 async function loadSharedTrip(token, options = {}) {
-  const { notifyOnError = false } = options;
+  const { notifyOnError = false, backgroundSync = false } = options;
 
-  setSavingState(true);
-  setLoadError("");
-  updateShareUI();
+  if (!backgroundSync) {
+    setSavingState(true);
+    setLoadError("");
+    updateShareUI();
+  }
 
   try {
     const result = await postShareRequest("load-trip", { token });
@@ -1664,6 +1671,14 @@ async function loadSharedTrip(token, options = {}) {
     startTripSync();
   } catch (error) {
     const message = getRequestErrorMessage(error, "load");
+
+    if (backgroundSync) {
+      setRemoteUpdateState(true, appState.remoteVersion ?? null);
+      clearAutosaveTimer();
+      updateShareUI();
+      return;
+    }
+
     setLoadError(message);
     setSaveError("");
     setAppMode("shared-view", "view");
@@ -1673,8 +1688,10 @@ async function loadSharedTrip(token, options = {}) {
       alert(message);
     }
   } finally {
-    setSavingState(false);
-    updateShareUI();
+    if (!backgroundSync) {
+      setSavingState(false);
+      updateShareUI();
+    }
   }
 }
 
