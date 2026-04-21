@@ -837,11 +837,11 @@ body {
 
 .summary-card-header {
   display: grid;
-  gap: 14px;
+  gap: 8px;
 }
 
 .summary-person-name {
-  font-size: 1.08rem;
+  font-size: 1.15rem;
   font-weight: 700;
   color: var(--primary-strong);
   letter-spacing: -0.01em;
@@ -850,53 +850,6 @@ body {
 .summary-label {
   font-size: 0.9rem;
   color: var(--text-light);
-}
-
-.summary-stats {
-  display: grid;
-  gap: 10px;
-}
-
-.summary-stat {
-  display: grid;
-  gap: 6px;
-  padding: 12px 14px;
-  border-radius: 18px;
-  border: 1px solid rgba(124, 98, 71, 0.12);
-  background: rgba(255, 250, 244, 0.82);
-  min-width: 0;
-}
-
-.summary-stat-label {
-  font-size: 0.8rem;
-  font-weight: 600;
-  letter-spacing: 0.01em;
-}
-
-.summary-stat-value {
-  display: grid;
-  gap: 2px;
-}
-
-.summary-stat-amount {
-  font-size: clamp(1.45rem, 2.4vw, 1.75rem);
-  line-height: 1.02;
-  letter-spacing: -0.03em;
-  overflow-wrap: normal;
-  word-break: keep-all;
-}
-
-.summary-stat-unit {
-  font-size: 0.9rem;
-  font-weight: 600;
-}
-
-.summary-stat-paid {
-  color: var(--success-color);
-}
-
-.summary-stat-owed {
-  color: var(--danger-color);
 }
 
 .summary-detail-section {
@@ -915,7 +868,7 @@ body {
 
 .summary-detail-summary {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
   cursor: pointer;
@@ -926,9 +879,55 @@ body {
   display: none;
 }
 
+.summary-detail-summary-main {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
 .summary-detail-title {
-  font-size: 0.88rem;
+  font-size: 0.84rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.summary-detail-section-paid .summary-detail-title {
+  color: var(--success-color);
+}
+
+.summary-detail-section-owed .summary-detail-title {
+  color: var(--danger-color);
+}
+
+.summary-detail-summary-value {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.summary-detail-summary-amount {
+  font-size: clamp(1.4rem, 2.6vw, 1.85rem);
+  line-height: 1;
+  letter-spacing: -0.035em;
   color: var(--text-dark);
+}
+
+.summary-detail-section-paid .summary-detail-summary-amount,
+.summary-detail-section-paid .summary-detail-summary-unit {
+  color: var(--success-color);
+}
+
+.summary-detail-section-owed .summary-detail-summary-amount,
+.summary-detail-section-owed .summary-detail-summary-unit {
+  color: var(--danger-color);
+}
+
+.summary-detail-summary-unit {
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: var(--text-light);
 }
 
 .summary-detail-count {
@@ -1228,6 +1227,14 @@ select:disabled {
 
   .section > h2[id] {
     scroll-margin-top: 22px;
+  }
+
+  .summary-detail-summary-amount {
+    font-size: clamp(1.25rem, 5.8vw, 1.55rem);
+  }
+
+  .summary-detail-summary-unit {
+    font-size: 0.8rem;
   }
 
   .add-expense-section,

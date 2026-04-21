@@ -850,26 +850,10 @@ function createSummaryCardMarkup(person, stats, details) {
   return `
       <div class="summary-card-header">
         <div class="summary-person-name">${person}</div>
-        <div class="summary-stats">
-          <div class="summary-stat summary-stat-paid">
-            <span class="summary-stat-label">💵 จ่ายแล้ว</span>
-            <div class="summary-stat-value">
-              <strong class="summary-stat-amount">${formatAmount(stats.paid)}</strong>
-              <span class="summary-stat-unit">บาท</span>
-            </div>
-          </div>
-          <div class="summary-stat summary-stat-owed">
-            <span class="summary-stat-label">💸 ต้องจ่าย</span>
-            <div class="summary-stat-value">
-              <strong class="summary-stat-amount">${formatAmount(stats.owed)}</strong>
-              <span class="summary-stat-unit">บาท</span>
-            </div>
-          </div>
-        </div>
       </div>
       <div class="summary-card-body">
-            ${buildDetailSectionMarkup("จ่ายไปแล้ว:", details.paid, (item) => `${item.name}: ${formatAmount(item.amount)} บาท (แบ่ง ${item.count} คน)`)}
-            ${buildDetailSectionMarkup("ต้องจ่าย:", details.owed, (item) => `${item.name}: ${formatAmount(item.amount)} บาท`)}
+            ${buildDetailSectionMarkup("💵 จ่ายแล้ว", stats.paid, details.paid, (item) => `${item.name}: ${formatAmount(item.amount)} บาท (แบ่ง ${item.count} คน)`, "paid")}
+            ${buildDetailSectionMarkup("💸 ต้องจ่าย", stats.owed, details.owed, (item) => `${item.name}: ${formatAmount(item.amount)} บาท`, "owed")}
       </div>
             <hr class="summary-divider">
       <div class="summary-balance-row">
@@ -881,14 +865,21 @@ function createSummaryCardMarkup(person, stats, details) {
         `;
 }
 
-function buildDetailSectionMarkup(title, items, formatter) {
+function buildDetailSectionMarkup(title, totalAmount, items, formatter, tone) {
   const itemCountLabel = items.length === 1 ? "1 รายการ" : `${items.length} รายการ`;
+  const toneClass = tone ? ` summary-detail-section-${tone}` : "";
 
   if (items.length === 0) {
     return `
-      <details class="summary-detail-section">
+      <details class="summary-detail-section${toneClass}">
         <summary class="summary-detail-summary">
-          <span class="summary-detail-title">${title}</span>
+          <div class="summary-detail-summary-main">
+            <span class="summary-detail-title">${title}</span>
+            <div class="summary-detail-summary-value">
+              <strong class="summary-detail-summary-amount">${formatAmount(totalAmount)}</strong>
+              <span class="summary-detail-summary-unit">บาท</span>
+            </div>
+          </div>
           <span class="summary-detail-count">ยังไม่มี</span>
         </summary>
         <div class="summary-detail-list">
@@ -905,9 +896,15 @@ function buildDetailSectionMarkup(title, items, formatter) {
     .join("");
 
   return `
-    <details class="summary-detail-section">
+    <details class="summary-detail-section${toneClass}">
       <summary class="summary-detail-summary">
-        <span class="summary-detail-title">${title}</span>
+        <div class="summary-detail-summary-main">
+          <span class="summary-detail-title">${title}</span>
+          <div class="summary-detail-summary-value">
+            <strong class="summary-detail-summary-amount">${formatAmount(totalAmount)}</strong>
+            <span class="summary-detail-summary-unit">บาท</span>
+          </div>
+        </div>
         <span class="summary-detail-count">${itemCountLabel}</span>
       </summary>
       <div class="summary-detail-list">${itemsMarkup}</div>
