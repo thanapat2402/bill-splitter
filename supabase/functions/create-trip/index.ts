@@ -1,3 +1,5 @@
+/// <reference lib="deno.window" />
+
 import {
   errorResponse,
   jsonResponse,
