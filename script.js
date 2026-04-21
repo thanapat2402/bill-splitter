@@ -13,7 +13,69 @@ const REALTIME_SYNC_EVENT = "trip-updated";
 const PROJECT_NAME = "หารกัน";
 const DEFAULT_TRIP_TITLE = "แบ่งหารบิล";
 const SHORTCUT_SCROLL_DURATION_MS = 2400;
-const DEFAULT_OPEN_OWED_BALANCE_THRESHOLD = -500;
+const SUMMARY_DETAIL_ANIMATION_FALLBACK_MS = 420;
+const DEMO_TRIP_PRESET = {
+  schemaVersion: TRIP_SCHEMA_VERSION,
+  title: "ทริปเชียงใหม่ Mock",
+  persons: ["Alice", "Bob", "Dog", "Nan"],
+  expenses: [
+    {
+      id: 101,
+      name: "ค่าที่พัก",
+      amount: 4200,
+      subExpenses: [
+        { name: "คืนวันศุกร์", amount: 2100 },
+        { name: "คืนวันเสาร์", amount: 2100 },
+      ],
+      paidBy: "Alice",
+      splitAmong: ["Alice", "Bob", "Dog", "Nan"],
+      date: "22/4/2569",
+    },
+    {
+      id: 102,
+      name: "หมูกระทะมื้อใหญ่",
+      amount: 1280,
+      subExpenses: [
+        { name: "ชุดหมู", amount: 780 },
+        { name: "เครื่องดื่ม", amount: 300 },
+        { name: "ของหวาน", amount: 200 },
+      ],
+      paidBy: "Bob",
+      splitAmong: ["Alice", "Bob", "Dog", "Nan"],
+      date: "22/4/2569",
+    },
+    {
+      id: 103,
+      name: "ค่าน้ำมันรถ",
+      amount: 1800,
+      subExpenses: [],
+      paidBy: "Dog",
+      splitAmong: ["Alice", "Bob", "Dog"],
+      date: "22/4/2569",
+    },
+    {
+      id: 104,
+      name: "ค่าเข้าคาเฟ่",
+      amount: 540,
+      subExpenses: [
+        { name: "กาแฟ", amount: 260 },
+        { name: "เค้ก", amount: 280 },
+      ],
+      paidBy: "Nan",
+      splitAmong: ["Alice", "Nan"],
+      date: "22/4/2569",
+    },
+    {
+      id: 105,
+      name: "ของฝาก",
+      amount: 950,
+      subExpenses: [],
+      paidBy: "Alice",
+      splitAmong: ["Bob", "Dog", "Nan"],
+      date: "22/4/2569",
+    },
+  ],
+};
 
 const appState = {
   mode: "local",
@@ -69,6 +131,7 @@ const dom = {
   summaryContent: document.getElementById("summaryContent"),
   settlementContent: document.getElementById("settlementContent"),
   noSettlementMsg: document.getElementById("noSettlement"),
+  loadDemoPresetBtn: document.getElementById("loadDemoPresetBtn"),
   resetBtn: document.getElementById("resetBtn"),
   selectAllBtn: document.getElementById("selectAllBtn"),
   deselectAllBtn: document.getElementById("deselectAllBtn"),
@@ -92,6 +155,7 @@ function bindEvents() {
   dom.shortcutLinks.forEach((link) => {
     link.addEventListener("click", handleShortcutClick);
   });
+  dom.loadDemoPresetBtn.addEventListener("click", handleLoadDemoPresetClick);
   dom.resetBtn.addEventListener("click", resetAll);
   dom.selectAllBtn.addEventListener("click", selectAllPersons);
   dom.deselectAllBtn.addEventListener("click", deselectAllPersons);
@@ -135,6 +199,7 @@ function handleSummaryDetailToggle(event) {
 }
 
 function expandSummaryDetail(details, content) {
+  clearSummaryDetailAnimation(details);
   details.dataset.animating = "true";
   details.setAttribute("open", "");
   content.style.height = "0px";
@@ -145,43 +210,74 @@ function expandSummaryDetail(details, content) {
     content.style.opacity = "1";
   });
 
-  const cleanup = (event) => {
-    if (event.target !== content || event.propertyName !== "height") {
-      return;
-    }
-
-    content.style.height = "auto";
-    content.style.opacity = "";
-    delete details.dataset.animating;
-    content.removeEventListener("transitionend", cleanup);
-  };
+  const cleanup = registerSummaryDetailAnimationCleanup(
+    details,
+    content,
+    () => {
+      content.style.height = "auto";
+      content.style.opacity = "";
+    },
+  );
 
   content.addEventListener("transitionend", cleanup);
 }
 
 function collapseSummaryDetail(details, content) {
+  clearSummaryDetailAnimation(details);
   details.dataset.animating = "true";
   content.style.height = `${content.scrollHeight}px`;
   content.style.opacity = "1";
+
+  void content.offsetHeight;
 
   requestAnimationFrame(() => {
     content.style.height = "0px";
     content.style.opacity = "0";
   });
 
+  const cleanup = registerSummaryDetailAnimationCleanup(
+    details,
+    content,
+    () => {
+      details.removeAttribute("open");
+      content.style.height = "";
+      content.style.opacity = "";
+    },
+  );
+
+  content.addEventListener("transitionend", cleanup);
+}
+
+function clearSummaryDetailAnimation(details) {
+  const cleanupTimerId = Number(details.dataset.cleanupTimerId || 0);
+
+  if (cleanupTimerId) {
+    window.clearTimeout(cleanupTimerId);
+  }
+
+  delete details.dataset.cleanupTimerId;
+  delete details.dataset.animating;
+}
+
+function registerSummaryDetailAnimationCleanup(details, content, finalize) {
   const cleanup = (event) => {
-    if (event.target !== content || event.propertyName !== "height") {
+    if (
+      event &&
+      (event.target !== content || event.propertyName !== "height")
+    ) {
       return;
     }
 
-    details.removeAttribute("open");
-    content.style.height = "";
-    content.style.opacity = "";
-    delete details.dataset.animating;
+    clearSummaryDetailAnimation(details);
+    finalize();
     content.removeEventListener("transitionend", cleanup);
   };
 
-  content.addEventListener("transitionend", cleanup);
+  details.dataset.cleanupTimerId = String(
+    window.setTimeout(() => cleanup(), SUMMARY_DETAIL_ANIMATION_FALLBACK_MS),
+  );
+
+  return cleanup;
 }
 
 function handleShortcutClick(event) {
@@ -419,13 +515,59 @@ function resetAll() {
     return;
   }
 
+  clearTripData();
+  clearTransientForms();
+  markDirty();
+  updateUI();
+}
+
+function handleLoadDemoPresetClick() {
+  if (appState.mode !== "local") {
+    alert("โหลดเดโมได้เฉพาะโหมดในเครื่องเท่านั้น");
+    return;
+  }
+
+  if (!assertEditableOrAlert()) {
+    return;
+  }
+
+  if (hasAnyTripContent()) {
+    const shouldReplace = confirm(
+      "ต้องการแทนข้อมูลปัจจุบันด้วยชุดเดโมตัวอย่างหรือไม่?",
+    );
+
+    if (!shouldReplace) {
+      return;
+    }
+  }
+
+  importTripData(DEMO_TRIP_PRESET);
+  clearTransientForms();
+  clearDirty();
+  setSaveError("");
+  setLoadError("");
+  setRemoteUpdateState(false);
+  appState.lastSavedAt = "";
+  updateUI();
+}
+
+function hasAnyTripContent() {
+  return (
+    data.persons.length > 0 ||
+    data.expenses.length > 0 ||
+    getNormalizedTripTitle() !== DEFAULT_TRIP_TITLE
+  );
+}
+
+function clearTripData() {
   data.title = DEFAULT_TRIP_TITLE;
   data.persons = [];
   data.expenses = [];
+}
+
+function clearTransientForms() {
   dom.personForm.reset();
   resetExpenseForm();
-  markDirty();
-  updateUI();
 }
 
 function getCheckedSplitPersons() {
@@ -714,7 +856,17 @@ function updateUI() {
   updateSummary();
   updateSettlement();
   applyReadOnlyUI(!canEdit());
+  updateActionsUI();
   updateShareUI();
+}
+
+function updateActionsUI() {
+  const canLoadDemoPreset = appState.mode === "local" && !appState.isSaving;
+
+  dom.loadDemoPresetBtn.disabled = !canLoadDemoPreset;
+  dom.loadDemoPresetBtn.title = canLoadDemoPreset
+    ? "โหลดชุดข้อมูลเดโมตัวอย่างเพื่อทดสอบหน้าจอทันที"
+    : "โหลดเดโมได้เฉพาะโหมดในเครื่อง";
 }
 
 function updateHeaderUI() {
@@ -923,15 +1075,13 @@ function updateSummary() {
 }
 
 function createSummaryCardMarkup(person, stats, details) {
-  const shouldOpenOwedSection = shouldOpenOwedSectionByDefault(stats);
-
   return `
       <div class="summary-card-header">
         <div class="summary-person-name">${person}</div>
       </div>
       <div class="summary-card-body">
             ${buildDetailSectionMarkup("💵 จ่ายแล้ว", stats.paid, details.paid, (item) => `${item.name}: ${formatAmount(item.amount)} บาท (แบ่ง ${item.count} คน)`, "paid")}
-            ${buildDetailSectionMarkup("💸 ต้องจ่าย", stats.owed, details.owed, (item) => `${item.name}: ${formatAmount(item.amount)} บาท`, "owed", shouldOpenOwedSection)}
+            ${buildDetailSectionMarkup("💸 ต้องจ่าย", stats.owed, details.owed, (item) => `${item.name}: ${formatAmount(item.amount)} บาท`, "owed")}
       </div>
             <hr class="summary-divider">
       <div class="summary-balance-row">
@@ -941,10 +1091,6 @@ function createSummaryCardMarkup(person, stats, details) {
         </div>
       </div>
         `;
-}
-
-function shouldOpenOwedSectionByDefault(stats) {
-  return stats.balance <= DEFAULT_OPEN_OWED_BALANCE_THRESHOLD && stats.owed > 0;
 }
 
 function buildDetailSectionMarkup(

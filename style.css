@@ -970,7 +970,8 @@ body {
     opacity 0.22s ease;
 }
 
-.summary-detail-section[open]:not([data-animating="true"]) .summary-detail-content {
+.summary-detail-section[open]:not([data-animating="true"])
+  .summary-detail-content {
   height: auto;
   opacity: 1;
 }
@@ -1052,37 +1053,53 @@ body {
 .settlement-item {
   padding: 18px 20px;
   border: 1px solid rgba(180, 138, 87, 0.2);
-  display: flex;
+  border-radius: calc(var(--radius) - 2px);
+  background: linear-gradient(180deg, rgba(255, 252, 246, 0.92), #fffaf2);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  justify-content: space-between;
+  gap: 14px;
 }
 
 .settlement-text {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
   font-size: 1.05rem;
+  min-width: 0;
 }
 
 .settlement-from {
   font-weight: 600;
   color: var(--danger-color);
+  font-size: clamp(1.55rem, 3vw, 2rem);
+  line-height: 1.05;
 }
 
 .settlement-to {
   font-weight: 600;
   color: var(--success-color);
+  font-size: clamp(1.55rem, 3vw, 2rem);
+  line-height: 1.05;
 }
 
 .settlement-arrow {
   color: var(--text-light);
-  margin: 0 8px;
+  margin: 0;
+  font-size: 1.8rem;
+  line-height: 1;
 }
 
 .settlement-amount {
-  font-size: 1.2rem;
+  justify-self: end;
+  font-size: clamp(1.3rem, 2.8vw, 1.7rem);
   font-weight: 700;
   color: var(--warning-color);
-  padding: 10px 14px;
+  padding: 12px 18px;
   background: #f4e9d8;
   border-radius: 999px;
+  white-space: nowrap;
 }
 
 /* Share Components */
@@ -1215,6 +1232,22 @@ select:disabled {
   padding: 18px 24px 24px;
 }
 
+.actions-description {
+  max-width: 580px;
+  margin: 0 auto 14px;
+}
+
+.actions-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+
+.actions-buttons .btn {
+  min-height: 48px;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   body {
@@ -1311,6 +1344,14 @@ select:disabled {
     grid-template-columns: 1fr;
   }
 
+  .actions-buttons {
+    flex-direction: column;
+  }
+
+  .actions-buttons .btn {
+    width: 100%;
+  }
+
   .share-notice {
     flex-direction: column;
     align-items: stretch;
@@ -1334,19 +1375,25 @@ select:disabled {
   }
 
   .settlement-item {
-    flex-direction: column;
-    align-items: flex-start;
+    grid-template-columns: minmax(0, 1fr) auto;
     gap: 10px;
   }
 
   .settlement-text {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
+    gap: 6px 8px;
+  }
+
+  .settlement-from,
+  .settlement-to {
+    font-size: clamp(1.25rem, 5vw, 1.7rem);
+  }
+
+  .settlement-arrow {
+    font-size: 1.5rem;
   }
 
   .settlement-amount {
-    align-self: flex-end;
+    justify-self: end;
   }
 }
 
@@ -1472,6 +1519,7 @@ select:disabled {
 
   .settlement-item {
     padding: 16px;
+    grid-template-columns: 1fr;
   }
 
   .settlement-text {
@@ -1480,5 +1528,6 @@ select:disabled {
 
   .settlement-amount {
     font-size: 1.1rem;
+    justify-self: start;
   }
 }
