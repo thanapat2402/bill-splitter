@@ -12,6 +12,7 @@ const SUPABASE_PUBLISHABLE_KEY =
 const REALTIME_SYNC_EVENT = "trip-updated";
 const PROJECT_NAME = "หารกัน";
 const DEFAULT_TRIP_TITLE = "แบ่งหารบิล";
+const SHORTCUT_SCROLL_DURATION_MS = 2400;
 
 const appState = {
   mode: "local",
@@ -44,6 +45,9 @@ const dom = {
   personForm: document.getElementById("personForm"),
   personNameInput: document.getElementById("personName"),
   tripTitleInput: document.getElementById("tripTitleInput"),
+  shortcutLinks: Array.from(
+    document.querySelectorAll('.shortcut-chip[href^="#"]'),
+  ),
   overviewPersonsCount: document.getElementById("overviewPersonsCount"),
   overviewExpensesCount: document.getElementById("overviewExpensesCount"),
   overviewTotalAmount: document.getElementById("overviewTotalAmount"),
@@ -84,6 +88,9 @@ function bindEvents() {
   dom.expenseForm.addEventListener("submit", addExpense);
   dom.tripTitleInput.addEventListener("input", handleTripTitleInput);
   dom.tripTitleInput.addEventListener("blur", normalizeTripTitleInput);
+  dom.shortcutLinks.forEach((link) => {
+    link.addEventListener("click", handleShortcutClick);
+  });
   dom.resetBtn.addEventListener("click", resetAll);
   dom.selectAllBtn.addEventListener("click", selectAllPersons);
   dom.deselectAllBtn.addEventListener("click", deselectAllPersons);
@@ -99,6 +106,67 @@ function bindEvents() {
   dom.copyViewLinkBtn.addEventListener("click", handleCopyViewLinkClick);
   dom.copyEditLinkBtn.addEventListener("click", handleCopyEditLinkClick);
   dom.reloadLatestBtn.addEventListener("click", handleReloadLatestClick);
+}
+
+function handleShortcutClick(event) {
+  const targetId = event.currentTarget.getAttribute("href");
+
+  if (!targetId || !targetId.startsWith("#")) {
+    return;
+  }
+
+  const targetElement = document.querySelector(targetId);
+
+  if (!targetElement) {
+    return;
+  }
+
+  event.preventDefault();
+
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    targetElement.scrollIntoView();
+    history.replaceState(null, "", targetId);
+    return;
+  }
+
+  smoothScrollToElement(targetElement, SHORTCUT_SCROLL_DURATION_MS);
+  history.replaceState(null, "", targetId);
+}
+
+function smoothScrollToElement(targetElement, durationMs) {
+  const startY = window.scrollY;
+  const targetY = window.scrollY + targetElement.getBoundingClientRect().top;
+  const distanceY = targetY - startY;
+  const rootElement = document.documentElement;
+  const previousScrollBehavior = rootElement.style.scrollBehavior;
+
+  if (Math.abs(distanceY) < 1) {
+    return;
+  }
+
+  const startTime = performance.now();
+
+  rootElement.style.scrollBehavior = "auto";
+
+  function step(currentTime) {
+    const elapsed = currentTime - startTime;
+    const progress = Math.min(elapsed / durationMs, 1);
+    const easedProgress =
+      progress < 0.5
+        ? 8 * Math.pow(progress, 4)
+        : 1 - Math.pow(-2 * progress + 2, 4) / 2;
+
+    window.scrollTo(0, startY + distanceY * easedProgress);
+
+    if (progress < 1) {
+      requestAnimationFrame(step);
+      return;
+    }
+
+    rootElement.style.scrollBehavior = previousScrollBehavior;
+  }
+
+  requestAnimationFrame(step);
 }
 
 function getTripTitle() {
@@ -780,18 +848,30 @@ function updateSummary() {
 
 function createSummaryCardMarkup(person, stats, details) {
   return `
-            <div class="summary-label">${person}</div>
-            <div class="summary-stats">
-                <div class="summary-stat summary-stat-paid">💵 จ่ายแล้ว: ${formatAmount(stats.paid)} บาท</div>
-                <div class="summary-stat summary-stat-owed">💸 ต้องจ่าย: ${formatAmount(stats.owed)} บาท</div>
-            </div>
+      <div class="summary-card-header">
+        <div class="summary-person-name">${person}</div>
+        <div class="summary-stats">
+          <div class="summary-stat summary-stat-paid">
+            <span class="summary-stat-label">💵 จ่ายแล้ว</span>
+            <strong class="summary-stat-amount">${formatAmount(stats.paid)} บาท</strong>
+          </div>
+          <div class="summary-stat summary-stat-owed">
+            <span class="summary-stat-label">💸 ต้องจ่าย</span>
+            <strong class="summary-stat-amount">${formatAmount(stats.owed)} บาท</strong>
+          </div>
+        </div>
+      </div>
+      <div class="summary-card-body">
             ${buildDetailSectionMarkup("จ่ายไปแล้ว:", details.paid, (item) => `${item.name}: ${formatAmount(item.amount)} บาท (แบ่ง ${item.count} คน)`)}
             ${buildDetailSectionMarkup("ต้องจ่าย:", details.owed, (item) => `${item.name}: ${formatAmount(item.amount)} บาท`)}
+      </div>
             <hr class="summary-divider">
-            <div class="summary-label">คงเหลือ</div>
-            <div class="summary-value ${getBalanceClass(stats.balance)}">
-                ${stats.balance > 0 ? "+" : ""}${formatAmount(stats.balance)}
-            </div>
+      <div class="summary-balance-row">
+        <div class="summary-label">คงเหลือ</div>
+        <div class="summary-value ${getBalanceClass(stats.balance)}">
+          ${stats.balance > 0 ? "+" : ""}${formatAmount(stats.balance)}
+        </div>
+      </div>
         `;
 }
 
@@ -802,11 +882,11 @@ function buildDetailSectionMarkup(title, items, formatter) {
 
   const itemsMarkup = items
     .map(
-      (item) => `<div class="summary-detail-item">• ${formatter(item)}</div>`,
+      (item) => `<div class="summary-detail-item">${formatter(item)}</div>`,
     )
     .join("");
 
-  return `<div class="summary-detail-section"><strong class="summary-detail-title">${title}</strong>${itemsMarkup}</div>`;
+  return `<div class="summary-detail-section"><strong class="summary-detail-title">${title}</strong><div class="summary-detail-list">${itemsMarkup}</div></div>`;
 }
 
 function getBalanceClass(balance) {
