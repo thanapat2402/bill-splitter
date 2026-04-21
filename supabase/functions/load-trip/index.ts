@@ -1,0 +1,116 @@
+import {
+  errorResponse,
+  jsonResponse,
+  parseJsonBody,
+  preflightResponse,
+} from "../_shared/http.ts";
+import { createAdminClient } from "../_shared/supabase.ts";
+import {
+  hashToken,
+  isShareLinkActive,
+  validateTripSnapshot,
+} from "../_shared/trip.ts";
+
+Deno.serve(async (request) => {
+  if (request.method === "OPTIONS") {
+    return preflightResponse();
+  }
+
+  if (request.method !== "POST") {
+    return errorResponse(405, "METHOD_NOT_ALLOWED", "Only POST is supported.");
+  }
+
+  try {
+    const body = await parseJsonBody(request);
+    const token = typeof body.token === "string" ? body.token.trim() : "";
+
+    if (!token) {
+      return errorResponse(400, "TOKEN_REQUIRED", "Share token is required.");
+    }
+
+    const adminClient = createAdminClient();
+    const tokenHash = await hashToken(token);
+
+    const linkResult = await adminClient
+      .from("trip_share_links")
+      .select("trip_id, role, revoked_at, expires_at")
+      .eq("token_hash", tokenHash)
+      .maybeSingle();
+
+    if (linkResult.error) {
+      throw new Error("LOAD_TRIP_FAILED");
+    }
+
+    if (!linkResult.data) {
+      return errorResponse(404, "LINK_NOT_FOUND", "Share link was not found.");
+    }
+
+    if (!isShareLinkActive(linkResult.data)) {
+      const errorCode = linkResult.data.revoked_at
+        ? "LINK_REVOKED"
+        : "LINK_EXPIRED";
+      return errorResponse(410, errorCode, "Share link is no longer active.");
+    }
+
+    const tripResult = await adminClient
+      .from("trips")
+      .select("id, data, version, updated_at, archived_at")
+      .eq("id", linkResult.data.trip_id)
+      .maybeSingle();
+
+    if (tripResult.error) {
+      throw new Error("LOAD_TRIP_FAILED");
+    }
+
+    if (!tripResult.data || tripResult.data.archived_at) {
+      return errorResponse(404, "TRIP_NOT_FOUND", "Trip was not found.");
+    }
+
+    validateTripSnapshot(tripResult.data.data);
+
+    return jsonResponse({
+      tripId: tripResult.data.id,
+      role: linkResult.data.role,
+      version: tripResult.data.version,
+      updatedAt: tripResult.data.updated_at,
+      data: tripResult.data.data,
+    });
+  } catch (error) {
+    if (error instanceof Error && error.message === "INVALID_JSON_BODY") {
+      return errorResponse(
+        400,
+        "INVALID_JSON_BODY",
+        "Request body must be valid JSON.",
+      );
+    }
+
+    if (error instanceof Error && error.message === "INVALID_TRIP_DATA") {
+      return errorResponse(
+        422,
+        "INVALID_TRIP_DATA",
+        "Trip snapshot is invalid.",
+      );
+    }
+
+    if (error instanceof Error && error.message === "UNSUPPORTED_TRIP_SCHEMA") {
+      return errorResponse(
+        422,
+        "UNSUPPORTED_TRIP_SCHEMA",
+        "Unsupported trip schema version.",
+      );
+    }
+
+    if (
+      error instanceof Error &&
+      error.message === "SUPABASE_ENV_NOT_CONFIGURED"
+    ) {
+      return errorResponse(
+        500,
+        "SUPABASE_ENV_NOT_CONFIGURED",
+        "Supabase environment variables are missing.",
+      );
+    }
+
+    return errorResponse(500, "LOAD_TRIP_FAILED", "Could not load trip.");
+  }
+});
