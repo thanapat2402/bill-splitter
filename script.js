@@ -5,6 +5,10 @@ const data = {
 
 const TRIP_SCHEMA_VERSION = 1;
 const SHARE_API_BASE_URL = "https://edpcqatatjkfgjxnogvq.functions.supabase.co";
+const SUPABASE_PROJECT_URL = "https://edpcqatatjkfgjxnogvq.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY =
+  "sb_publishable_j41m4XEbr49hZSehREyKsw_xsvko8E_";
+const REALTIME_SYNC_EVENT = "trip-updated";
 
 const appState = {
   mode: "local",
@@ -21,11 +25,17 @@ const appState = {
   remoteVersion: null,
   autosaveTimerId: null,
   versionPollTimerId: null,
+  realtimeClient: null,
+  realtimeChannel: null,
+  realtimeJoinPromise: null,
+  realtimeStatus: "idle",
   shareLinks: {
     viewUrl: "",
     editUrl: "",
   },
 };
+
+let supabaseModulePromise = null;
 
 const dom = {
   personForm: document.getElementById("personForm"),
@@ -968,12 +978,12 @@ function setAppMode(mode, role = "edit") {
   appState.mode = mode;
   appState.role = role;
 
-  if (mode === "shared-edit") {
-    startVersionPolling();
+  if (isSharedMode()) {
+    startTripSync();
     return;
   }
 
-  stopVersionPolling();
+  stopTripSync();
 }
 
 function markDirty() {
@@ -1265,6 +1275,194 @@ async function postShareRequest(path, payload) {
   return result;
 }
 
+async function getRealtimeClient() {
+  if (appState.realtimeClient) {
+    return appState.realtimeClient;
+  }
+
+  if (!supabaseModulePromise) {
+    supabaseModulePromise =
+      import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm");
+  }
+
+  const { createClient } = await supabaseModulePromise;
+  appState.realtimeClient = createClient(
+    SUPABASE_PROJECT_URL,
+    SUPABASE_PUBLISHABLE_KEY,
+  );
+  return appState.realtimeClient;
+}
+
+function getTripRealtimeChannelName(tripId) {
+  return `trip:${tripId}`;
+}
+
+function shouldAutoReloadRemoteUpdate(nextVersion) {
+  if (!Number.isInteger(nextVersion)) {
+    return false;
+  }
+
+  if (nextVersion <= (appState.version ?? 0)) {
+    return false;
+  }
+
+  if (appState.isSaving) {
+    return false;
+  }
+
+  return appState.mode === "shared-view" || !appState.isDirty;
+}
+
+function handleRealtimeTripUpdate(payload) {
+  const nextVersion = Number(payload?.payload?.version);
+
+  if (!Number.isInteger(nextVersion)) {
+    return;
+  }
+
+  if (nextVersion <= (appState.version ?? 0)) {
+    return;
+  }
+
+  if (shouldAutoReloadRemoteUpdate(nextVersion)) {
+    void loadSharedTrip(appState.shareToken);
+    return;
+  }
+
+  setRemoteUpdateState(true, nextVersion);
+  clearAutosaveTimer();
+  updateShareUI();
+}
+
+async function ensureTripRealtimeChannel() {
+  if (!appState.tripId) {
+    return null;
+  }
+
+  const expectedChannelName = getTripRealtimeChannelName(appState.tripId);
+
+  if (
+    appState.realtimeChannel &&
+    appState.realtimeChannel.topic === expectedChannelName
+  ) {
+    if (appState.realtimeJoinPromise) {
+      await appState.realtimeJoinPromise;
+    }
+
+    return appState.realtimeStatus === "SUBSCRIBED"
+      ? appState.realtimeChannel
+      : null;
+  }
+
+  await stopRealtimeChannel();
+
+  const client = await getRealtimeClient();
+  const channel = client.channel(expectedChannelName, {
+    config: {
+      broadcast: {
+        ack: true,
+      },
+    },
+  });
+
+  channel.on("broadcast", { event: REALTIME_SYNC_EVENT }, (payload) => {
+    handleRealtimeTripUpdate(payload);
+  });
+
+  appState.realtimeChannel = channel;
+  appState.realtimeStatus = "connecting";
+
+  appState.realtimeJoinPromise = new Promise((resolve) => {
+    channel.subscribe((status) => {
+      if (appState.realtimeChannel !== channel) {
+        resolve(null);
+        return;
+      }
+
+      appState.realtimeStatus = status;
+
+      if (status === "SUBSCRIBED") {
+        stopVersionPolling();
+        resolve(status);
+        return;
+      }
+
+      if (
+        status === "CHANNEL_ERROR" ||
+        status === "TIMED_OUT" ||
+        status === "CLOSED"
+      ) {
+        if (canEdit()) {
+          startVersionPolling();
+        }
+
+        resolve(status);
+      }
+    });
+  });
+
+  await appState.realtimeJoinPromise;
+  return appState.realtimeStatus === "SUBSCRIBED" ? channel : null;
+}
+
+async function stopRealtimeChannel() {
+  if (!appState.realtimeChannel || !appState.realtimeClient) {
+    appState.realtimeChannel = null;
+    appState.realtimeJoinPromise = null;
+    appState.realtimeStatus = "idle";
+    return;
+  }
+
+  const activeChannel = appState.realtimeChannel;
+  appState.realtimeChannel = null;
+  appState.realtimeJoinPromise = null;
+  appState.realtimeStatus = "idle";
+  await appState.realtimeClient.removeChannel(activeChannel);
+}
+
+function startTripSync() {
+  if (!appState.tripId || !appState.shareToken) {
+    return;
+  }
+
+  void ensureTripRealtimeChannel().catch(() => {
+    if (canEdit()) {
+      startVersionPolling();
+    }
+  });
+}
+
+function stopTripSync() {
+  void stopRealtimeChannel();
+  stopVersionPolling();
+}
+
+async function broadcastTripUpdate(version, updatedAt) {
+  if (!appState.tripId) {
+    return;
+  }
+
+  try {
+    const channel = await ensureTripRealtimeChannel();
+
+    if (!channel) {
+      return;
+    }
+
+    await channel.send({
+      type: "broadcast",
+      event: REALTIME_SYNC_EVENT,
+      payload: {
+        tripId: appState.tripId,
+        version,
+        updatedAt,
+      },
+    });
+  } catch {
+    // Realtime is best-effort. Polling fallback handles missed notifications.
+  }
+}
+
 function startVersionPolling() {
   stopVersionPolling();
 
@@ -1338,6 +1536,7 @@ async function createSharedTrip() {
     setAppMode("shared-edit", "edit");
     replaceUrlIfPossible(result.editUrl);
     updateUI();
+    void broadcastTripUpdate(result.version, result.updatedAt);
     alert("สร้างลิงก์แชร์สำเร็จแล้ว");
   } catch (error) {
     setSaveError(getRequestErrorMessage(error, "create"));
@@ -1381,6 +1580,7 @@ async function loadSharedTrip(token, options = {}) {
       result.role,
     );
     updateUI();
+    startTripSync();
   } catch (error) {
     const message = getRequestErrorMessage(error, "load");
     setLoadError(message);
@@ -1418,6 +1618,7 @@ async function saveSharedTrip({ manual }) {
     appState.lastSavedAt = result.updatedAt;
     clearDirty();
     setRemoteUpdateState(false);
+    void broadcastTripUpdate(result.version, result.updatedAt);
   } catch (error) {
     if (error.code === "VERSION_CONFLICT") {
       setRemoteUpdateState(true, error.payload?.latestVersion ?? null);
