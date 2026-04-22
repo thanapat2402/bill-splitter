@@ -132,111 +132,137 @@
             ระบบจะคำนวณสรุปให้ทันที
           </p>
           <form id="expenseForm" class="form" autocomplete="off">
-            <div class="form-group">
-              <label for="expenseName">ชื่อรายการ</label>
-              <input
-                type="text"
-                id="expenseName"
-                placeholder="เช่น อาหาร, ที่พัก..."
-                required
-              />
-            </div>
-
-            <div class="form-group">
-              <label id="subExpensesLabel">รายการย่อย</label>
-              <p id="subExpensesHint" class="form-hint">
-                ไม่บังคับเพิ่ม หากไม่มีรายการย่อยสามารถกรอกยอดรวมรายการเองได้
-              </p>
-              <button
-                type="button"
-                id="toggleSubExpensesBtn"
-                class="btn btn-small btn-secondary add-sub-expense-btn accordion-toggle"
-                aria-expanded="false"
-                aria-controls="subExpensesPanel"
-                aria-describedby="subExpensesHint"
-              >
-                <span class="accordion-toggle-content">
-                  <span class="accordion-toggle-text">เพิ่มรายการย่อย</span>
-                  <span class="accordion-toggle-summary"
-                    >ยังไม่มีรายการย่อย</span
-                  >
-                </span>
-                <span class="accordion-toggle-icon" aria-hidden="true">▾</span>
-              </button>
-              <div
-                id="subExpensesPanel"
-                class="sub-expenses-panel is-hidden"
-                aria-hidden="true"
-                role="region"
-                aria-labelledby="subExpensesLabel toggleSubExpensesBtn"
-                aria-describedby="subExpensesHint"
-              >
-                <div id="subExpenses" class="sub-expenses-list"></div>
-                <div class="sub-expense-actions">
-                  <button
-                    type="button"
-                    id="addSubExpenseBtn"
-                    class="btn btn-small btn-secondary"
-                  >
-                    + เพิ่มรายการย่อยอีกบรรทัด
-                  </button>
-                  <button
-                    type="button"
-                    id="clearSubExpensesBtn"
-                    class="btn btn-small btn-clear-sub-expenses"
-                  >
-                    ล้างรายการย่อยทั้งหมด
-                  </button>
-                </div>
+            <div class="expense-form-block expense-form-block-primary">
+              <div class="expense-form-block-header">
+                <p class="expense-form-step">1. ข้อมูลรายการ</p>
+                <p class="expense-form-block-hint">
+                  เริ่มจากตั้งชื่อบิลนี้ก่อน
+                </p>
               </div>
-            </div>
-
-            <div class="form-row form-row-split">
-              <div class="form-group expense-total-group">
-                <label for="expenseTotal">ยอดรวมรายการ</label>
+              <div class="form-group">
+                <label for="expenseName">ชื่อรายการ</label>
                 <input
-                  type="number"
-                  id="expenseTotal"
-                  placeholder="0.00"
-                  min="0"
-                  step="0.01"
+                  type="text"
+                  id="expenseName"
+                  placeholder="เช่น อาหาร, ที่พัก..."
                   required
                 />
               </div>
 
-              <div class="form-group">
-                <label for="paidBy">ผู้จ่าย</label>
-                <select id="paidBy" required>
-                  <option value="">-- เลือกผู้จ่าย --</option>
-                </select>
+              <div class="form-group expense-form-optional-group">
+                <label id="subExpensesLabel">รายการย่อย</label>
+                <p id="subExpensesHint" class="form-hint">
+                  ไม่บังคับเพิ่ม หากไม่มีรายการย่อยสามารถกรอกยอดรวมรายการเองได้
+                </p>
+                <button
+                  type="button"
+                  id="toggleSubExpensesBtn"
+                  class="btn btn-small btn-secondary add-sub-expense-btn accordion-toggle"
+                  aria-expanded="false"
+                  aria-controls="subExpensesPanel"
+                  aria-describedby="subExpensesHint"
+                >
+                  <span class="accordion-toggle-content">
+                    <span class="accordion-toggle-text">เพิ่มรายการย่อย</span>
+                    <span class="accordion-toggle-summary"
+                      >ยังไม่มีรายการย่อย</span
+                    >
+                  </span>
+                  <span class="accordion-toggle-icon" aria-hidden="true"
+                    >▾</span
+                  >
+                </button>
+                <div
+                  id="subExpensesPanel"
+                  class="sub-expenses-panel is-hidden"
+                  aria-hidden="true"
+                  role="region"
+                  aria-labelledby="subExpensesLabel toggleSubExpensesBtn"
+                  aria-describedby="subExpensesHint"
+                >
+                  <div id="subExpenses" class="sub-expenses-list"></div>
+                  <div class="sub-expense-actions">
+                    <button
+                      type="button"
+                      id="addSubExpenseBtn"
+                      class="btn btn-small btn-secondary"
+                    >
+                      + เพิ่มรายการย่อยอีกบรรทัด
+                    </button>
+                    <button
+                      type="button"
+                      id="clearSubExpensesBtn"
+                      class="btn btn-small btn-clear-sub-expenses"
+                    >
+                      ล้างรายการย่อยทั้งหมด
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
 
-            <div class="form-group">
-              <label id="splitPersonsLabel">แบ่งให้ (เลือกได้หลายคน)</label>
-              <div class="split-buttons">
-                <button
-                  type="button"
-                  id="selectAllBtn"
-                  class="btn btn-small btn-secondary"
-                >
-                  เลือกทั้งหมด
-                </button>
-                <button
-                  type="button"
-                  id="deselectAllBtn"
-                  class="btn btn-small btn-secondary"
-                >
-                  ยกเลิกทั้งหมด
-                </button>
+            <div class="expense-form-block">
+              <div class="expense-form-block-header">
+                <p class="expense-form-step">2. ใครจ่ายและยอดรวม</p>
+                <p class="expense-form-block-hint">
+                  ระบุยอดรวมก่อน แล้วเลือกคนที่ออกเงิน
+                </p>
               </div>
-              <div
-                id="splitPersons"
-                class="checkbox-group"
-                role="group"
-                aria-labelledby="splitPersonsLabel"
-              >
-                <!-- Will be populated by JavaScript -->
+              <div class="form-row form-row-split">
+                <div class="form-group expense-total-group">
+                  <label for="expenseTotal">ยอดรวมรายการ</label>
+                  <input
+                    type="number"
+                    id="expenseTotal"
+                    placeholder="0.00"
+                    min="0"
+                    step="0.01"
+                    required
+                  />
+                </div>
+
+                <div class="form-group">
+                  <label for="paidBy">ผู้จ่าย</label>
+                  <select id="paidBy" required>
+                    <option value="">-- เลือกผู้จ่าย --</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="expense-form-block">
+              <div class="expense-form-block-header">
+                <p class="expense-form-step">3. หารกับใคร</p>
+                <p class="expense-form-block-hint">
+                  เลือกเฉพาะคนที่ต้องร่วมจ่ายบิลนี้
+                </p>
+              </div>
+              <div class="form-group">
+                <label id="splitPersonsLabel">แบ่งให้ (เลือกได้หลายคน)</label>
+                <div class="split-buttons">
+                  <button
+                    type="button"
+                    id="selectAllBtn"
+                    class="btn btn-small btn-secondary"
+                  >
+                    เลือกทั้งหมด
+                  </button>
+                  <button
+                    type="button"
+                    id="deselectAllBtn"
+                    class="btn btn-small btn-secondary"
+                  >
+                    ยกเลิกทั้งหมด
+                  </button>
+                </div>
+                <div
+                  id="splitPersons"
+                  class="checkbox-group"
+                  role="group"
+                  aria-labelledby="splitPersonsLabel"
+                >
+                  <!-- Will be populated by JavaScript -->
+                </div>
               </div>
             </div>
 
@@ -387,11 +413,23 @@
           <p class="section-description actions-description">
             โหลดชุดเดโมเพื่อทดสอบ UX ได้ทันที หรือรีเซ็ตกลับเป็นทริปว่าง
           </p>
-          <div class="actions-buttons">
-            <button id="loadDemoPresetBtn" class="btn btn-secondary">
-              โหลดเดโมตัวอย่าง
-            </button>
-            <button id="resetBtn" class="btn btn-danger">รีเซ็ตทั้งหมด</button>
+          <div class="actions-layout">
+            <div class="actions-group">
+              <p class="actions-group-label">ทดลองใช้งาน</p>
+              <div class="actions-buttons">
+                <button id="loadDemoPresetBtn" class="btn btn-secondary">
+                  โหลดเดโมตัวอย่าง
+                </button>
+              </div>
+            </div>
+            <div class="actions-group actions-group-danger">
+              <p class="actions-group-label">ล้างข้อมูล</p>
+              <div class="actions-buttons actions-buttons-danger">
+                <button id="resetBtn" class="btn btn-danger">
+                  รีเซ็ตทั้งหมด
+                </button>
+              </div>
+            </div>
           </div>
         </section>
       </main>

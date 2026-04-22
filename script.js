@@ -1160,17 +1160,17 @@ function createSummaryCardMarkup(person, stats, details) {
       <div class="summary-card-header">
         <div class="summary-person-name">${person}</div>
       </div>
-      <div class="summary-card-body">
-            ${buildDetailSectionMarkup("💵 จ่ายแล้ว", stats.paid, details.paid, (item) => `${item.name}: ${formatAmount(item.amount)} บาท (แบ่ง ${item.count} คน)`, "paid")}
-            ${buildDetailSectionMarkup("💸 ต้องจ่าย", stats.owed, details.owed, (item) => `${item.name}: ${formatAmount(item.amount)} บาท`, "owed")}
-      </div>
-            <hr class="summary-divider">
       <div class="summary-balance-row">
         <div class="summary-balance-kicker ${balanceMeta.kickerClass}">${balanceMeta.label}</div>
         <div class="summary-value ${getBalanceClass(stats.balance)}">
           ${formatAmount(Math.abs(stats.balance))}
         </div>
         <div class="summary-label">สุทธิหลังหักทุกบิล</div>
+      </div>
+            <hr class="summary-divider">
+      <div class="summary-card-body">
+            ${buildDetailSectionMarkup("💵 จ่ายแล้ว", stats.paid, details.paid, (item) => `${item.name}: ${formatAmount(item.amount)} บาท (แบ่ง ${item.count} คน)`, "paid")}
+            ${buildDetailSectionMarkup("💸 ต้องจ่าย", stats.owed, details.owed, (item) => `${item.name}: ${formatAmount(item.amount)} บาท`, "owed")}
       </div>
         `;
 }
@@ -1338,7 +1338,6 @@ function updateSettlement() {
                 <span class="settlement-arrow">→</span>
                 <span class="settlement-to">${settlement.to}</span>
             </div>
-            <div class="settlement-caption">โอนให้จบได้เลยในรอบนี้</div>
             </div>
             <div class="settlement-amount">${formatAmount(settlement.amount)} บาท</div>
         `;
@@ -1597,8 +1596,13 @@ function updateShareUI() {
   updateRemoteUpdateNotice();
 
   const shouldShowPrimaryShareAction = appState.mode === "local";
+  const shouldShowViewCopyAction = Boolean(appState.shareLinks.viewUrl);
+  const shouldShowEditCopyAction =
+    Boolean(appState.shareLinks.editUrl) && appState.mode === "shared-edit";
 
   dom.shareTripBtn.classList.toggle("is-hidden", !shouldShowPrimaryShareAction);
+  dom.copyViewLinkBtn.classList.toggle("is-hidden", !shouldShowViewCopyAction);
+  dom.copyEditLinkBtn.classList.toggle("is-hidden", !shouldShowEditCopyAction);
   dom.shareActions.classList.toggle(
     "share-actions-compact",
     !shouldShowPrimaryShareAction,
@@ -1641,26 +1645,26 @@ function getShareHintText() {
   }
 
   if (appState.mode === "local") {
-    return "สร้างลิงก์แชร์ครั้งแรกเพื่อเปลี่ยนเอกสารนี้เป็น shared trip และเปิดลิงก์ดูอย่างเดียวกับลิงก์แก้ไข";
+    return "พร้อมเมื่อไรค่อยสร้างลิงก์ แล้วส่งต่อให้เพื่อนในทริปได้ทันที";
   }
 
   if (appState.mode === "shared-view") {
-    return "ลิงก์นี้ดูได้อย่างเดียว ไม่สามารถแก้ไขหรือบันทึกข้อมูลได้";
+    return "ลิงก์นี้ดูได้อย่างเดียว ส่งต่อได้ แต่แก้ไขข้อมูลไม่ได้";
   }
 
-  return "ทุกการแก้ไขที่ commit แล้วจะซิงก์อัตโนมัติ และสามารถคัดลอกลิงก์ส่งต่อได้จากปุ่มด้านล่าง";
+  return "ทุกการแก้ไขที่ commit แล้วจะซิงก์อัตโนมัติ และคัดลอกลิงก์ส่งต่อได้ทันที";
 }
 
 function getShareSectionDescription() {
   if (appState.mode === "local") {
-    return "เมื่อพร้อมแล้ว สร้างลิงก์เพื่อให้คนอื่นเปิดดูหรือแก้ไขทริปร่วมกันได้ทันที";
+    return "สร้างลิงก์ครั้งเดียว แล้วส่งต่อให้เพื่อนเปิดดูหรือช่วยแก้ไขได้ทันที";
   }
 
   if (appState.mode === "shared-view") {
-    return "ทริปนี้เปิดผ่านลิงก์ดูอย่างเดียว สามารถคัดลอกลิงก์ส่งต่อได้ แต่แก้ไขข้อมูลไม่ได้";
+    return "คุณกำลังเปิดทริปผ่านลิงก์ดูอย่างเดียว และคัดลอกลิงก์นี้ส่งต่อได้";
   }
 
-  return "ทริปนี้กำลังซิงก์อัตโนมัติอยู่แล้ว ส่งต่อได้ทั้งลิงก์ดูอย่างเดียวและลิงก์แก้ไข";
+  return "ทริปนี้กำลังซิงก์อัตโนมัติอยู่แล้ว และพร้อมส่งต่อทั้งลิงก์ดูอย่างเดียวกับลิงก์แก้ไข";
 }
 
 function getSharePrimaryActionTitle() {
@@ -1715,8 +1719,14 @@ function updateSaveStatusText() {
 
   if (appState.mode === "local") {
     dom.saveStatusText.textContent = appState.isDirty
-      ? "มีการเปลี่ยนแปลงที่ยังไม่บันทึก"
-      : "ยังไม่ได้แชร์";
+      ? "มีการเปลี่ยนแปลงในเครื่อง"
+      : "ยังเป็นทริปในเครื่อง";
+    dom.saveStatusText.className = "save-status";
+    return;
+  }
+
+  if (appState.mode === "shared-view") {
+    dom.saveStatusText.textContent = "เปิดผ่านลิงก์ดูอย่างเดียว";
     dom.saveStatusText.className = "save-status";
     return;
   }
