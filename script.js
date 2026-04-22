@@ -105,6 +105,9 @@ const appState = {
 let supabaseModulePromise = null;
 
 const dom = {
+  firstStepGuide: document.getElementById("firstStepGuide"),
+  focusAddPersonBtn: document.getElementById("focusAddPersonBtn"),
+  loadDemoPresetGuideBtn: document.getElementById("loadDemoPresetGuideBtn"),
   personForm: document.getElementById("personForm"),
   personNameInput: document.getElementById("personName"),
   tripTitleInput: document.getElementById("tripTitleInput"),
@@ -115,6 +118,10 @@ const dom = {
   overviewExpensesCount: document.getElementById("overviewExpensesCount"),
   overviewTotalAmount: document.getElementById("overviewTotalAmount"),
   overviewModeText: document.getElementById("overviewModeText"),
+  addExpenseSection: document.getElementById("addExpenseSection"),
+  addExpenseDescription: document.getElementById("addExpenseDescription"),
+  addPersonSection: document.getElementById("addPersonSection"),
+  addPersonDescription: document.getElementById("addPersonDescription"),
   personsList: document.getElementById("personsList"),
   expenseForm: document.getElementById("expenseForm"),
   expenseNameInput: document.getElementById("expenseName"),
@@ -138,7 +145,9 @@ const dom = {
   tripStatusBar: document.getElementById("tripStatusBar"),
   tripModeBadge: document.getElementById("tripModeBadge"),
   saveStatusText: document.getElementById("saveStatusText"),
+  shareDescription: document.getElementById("shareDescription"),
   shareHint: document.getElementById("shareHint"),
+  shareActions: document.getElementById("shareActions"),
   shareTripBtn: document.getElementById("shareTripBtn"),
   copyViewLinkBtn: document.getElementById("copyViewLinkBtn"),
   copyEditLinkBtn: document.getElementById("copyEditLinkBtn"),
@@ -148,6 +157,7 @@ const dom = {
 };
 
 function bindEvents() {
+  dom.focusAddPersonBtn.addEventListener("click", handleFocusAddPersonClick);
   dom.personForm.addEventListener("submit", addPerson);
   dom.expenseForm.addEventListener("submit", addExpense);
   dom.tripTitleInput.addEventListener("input", handleTripTitleInput);
@@ -155,6 +165,10 @@ function bindEvents() {
   dom.shortcutLinks.forEach((link) => {
     link.addEventListener("click", handleShortcutClick);
   });
+  dom.loadDemoPresetGuideBtn.addEventListener(
+    "click",
+    handleLoadDemoPresetClick,
+  );
   dom.loadDemoPresetBtn.addEventListener("click", handleLoadDemoPresetClick);
   dom.resetBtn.addEventListener("click", resetAll);
   dom.selectAllBtn.addEventListener("click", selectAllPersons);
@@ -172,6 +186,25 @@ function bindEvents() {
   dom.copyViewLinkBtn.addEventListener("click", handleCopyViewLinkClick);
   dom.copyEditLinkBtn.addEventListener("click", handleCopyEditLinkClick);
   dom.reloadLatestBtn.addEventListener("click", handleReloadLatestClick);
+}
+
+function handleFocusAddPersonClick() {
+  const addPersonHeading = document.getElementById("addPersonHeading");
+
+  if (!addPersonHeading) {
+    return;
+  }
+
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    addPersonHeading.scrollIntoView();
+    dom.personNameInput.focus();
+    return;
+  }
+
+  smoothScrollToElement(addPersonHeading, SHORTCUT_SCROLL_DURATION_MS / 1.8);
+  window.setTimeout(() => {
+    dom.personNameInput.focus();
+  }, 220);
 }
 
 function handleSummaryDetailToggle(event) {
@@ -856,17 +889,62 @@ function updateUI() {
   updateSummary();
   updateSettlement();
   applyReadOnlyUI(!canEdit());
+  updateJourneyUI();
   updateActionsUI();
   updateShareUI();
+}
+
+function updateJourneyUI() {
+  const hasPersons = data.persons.length > 0;
+  const canCommitExpense = canEdit() && hasPersons;
+
+  document.body.classList.toggle("is-onboarding", !hasPersons);
+  dom.firstStepGuide.classList.toggle("is-hidden", hasPersons);
+  dom.addExpenseSection.classList.toggle("section-locked", !hasPersons);
+  dom.addPersonSection.classList.toggle("section-priority", !hasPersons);
+  dom.addExpenseDescription.textContent = hasPersons
+    ? "กรอกชื่อรายการ จำนวนเงิน และเลือกคนที่ต้องหาร ระบบจะคำนวณสรุปให้ทันที"
+    : "เริ่มจากเพิ่มสมาชิกก่อน แล้วฟอร์มเพิ่มรายการจะพร้อมใช้งานทันที";
+  dom.addPersonDescription.textContent = hasPersons
+    ? "เพิ่มสมาชิกก่อนเริ่มลงบิล เพื่อให้เลือกคนจ่ายและคนที่ต้องหารได้สะดวก"
+    : "นี่คือขั้นแรกของทริปนี้ ใส่ชื่อสมาชิกให้ครบก่อนค่อยลงบิล";
+
+  setExpenseFormEnabled(canCommitExpense);
+}
+
+function setExpenseFormEnabled(isEnabled) {
+  dom.expenseNameInput.disabled = !isEnabled;
+  dom.expenseTotalInput.disabled = !isEnabled;
+  dom.paidBySelect.disabled = !isEnabled;
+  dom.selectAllBtn.disabled = !isEnabled;
+  dom.deselectAllBtn.disabled = !isEnabled;
+  dom.toggleSubExpensesBtn.disabled = !isEnabled;
+  dom.addSubExpenseBtn.disabled = !isEnabled;
+  dom.clearSubExpensesBtn.disabled = !isEnabled;
+  dom.expenseForm.querySelector('button[type="submit"]').disabled = !isEnabled;
+
+  dom.splitPersonsDiv
+    .querySelectorAll('input[type="checkbox"]')
+    .forEach((checkbox) => {
+      checkbox.disabled = !isEnabled;
+    });
+
+  dom.subExpensesContainer
+    .querySelectorAll("input, button")
+    .forEach((element) => {
+      element.disabled = !isEnabled;
+    });
 }
 
 function updateActionsUI() {
   const canLoadDemoPreset = appState.mode === "local" && !appState.isSaving;
 
   dom.loadDemoPresetBtn.disabled = !canLoadDemoPreset;
+  dom.loadDemoPresetGuideBtn.disabled = !canLoadDemoPreset;
   dom.loadDemoPresetBtn.title = canLoadDemoPreset
     ? "โหลดชุดข้อมูลเดโมตัวอย่างเพื่อทดสอบหน้าจอทันที"
     : "โหลดเดโมได้เฉพาะโหมดในเครื่อง";
+  dom.loadDemoPresetGuideBtn.title = dom.loadDemoPresetBtn.title;
 }
 
 function updateHeaderUI() {
@@ -889,7 +967,7 @@ function updateOverviewUI() {
 
 function getOverviewModeText() {
   if (appState.mode === "shared-edit") {
-    return "แก้ไขร่วมกัน";
+    return "ซิงก์อัตโนมัติ";
   }
 
   if (appState.mode === "shared-view") {
@@ -971,18 +1049,19 @@ function createExpenseMarkup(expense) {
 
   return `
             <div class="expense-detail">
-                <div class="expense-name">${expense.name}</div>
-                <div class="expense-info">💸 ${expense.paidBy} จ่ายไป</div>
-                <div class="expense-info">📅 ${expense.date}</div>
+        <div class="expense-name-row">
+          <div class="expense-name">${expense.name}</div>
+          <button type="button" class="btn btn-remove" onclick="removeExpense(${expense.id})">ลบ</button>
+        </div>
+        <div class="expense-meta-row">
+          <span class="expense-meta-pill">💸 ${expense.paidBy} จ่าย</span>
+          <span class="expense-meta-pill">📅 ${expense.date}</span>
+        </div>
                 <div class="sub-expense-list">${createSubExpenseListMarkup(expense.subExpenses)}</div>
             </div>
             <div class="expense-amount">
-                <div class="amount">รวม ${formatAmount(expense.amount)} บาท</div>
-                <div class="split-info">แบ่งให้ ${splitCount} คน</div>
-                <div class="split-info">(${formatAmount(amountPerPerson)} บาท/คน)</div>
-            </div>
-            <div class="expense-actions">
-                <button type="button" class="btn btn-remove" onclick="removeExpense(${expense.id})">ลบ</button>
+        <div class="expense-total-pill">${formatAmount(expense.amount)} บาท</div>
+        <div class="split-info">หาร ${splitCount} คน • ${formatAmount(amountPerPerson)} บาท/คน</div>
             </div>
         `;
 }
@@ -1075,6 +1154,8 @@ function updateSummary() {
 }
 
 function createSummaryCardMarkup(person, stats, details) {
+  const balanceMeta = getBalanceMeta(stats.balance);
+
   return `
       <div class="summary-card-header">
         <div class="summary-person-name">${person}</div>
@@ -1085,12 +1166,34 @@ function createSummaryCardMarkup(person, stats, details) {
       </div>
             <hr class="summary-divider">
       <div class="summary-balance-row">
-        <div class="summary-label">คงเหลือ</div>
+        <div class="summary-balance-kicker ${balanceMeta.kickerClass}">${balanceMeta.label}</div>
         <div class="summary-value ${getBalanceClass(stats.balance)}">
-          ${stats.balance > 0 ? "+" : ""}${formatAmount(stats.balance)}
+          ${formatAmount(Math.abs(stats.balance))}
         </div>
+        <div class="summary-label">สุทธิหลังหักทุกบิล</div>
       </div>
         `;
+}
+
+function getBalanceMeta(balance) {
+  if (balance > 0.01) {
+    return {
+      label: "รับคืนสุทธิ",
+      kickerClass: "summary-balance-kicker-positive",
+    };
+  }
+
+  if (balance < -0.01) {
+    return {
+      label: "ต้องโอนสุทธิ",
+      kickerClass: "summary-balance-kicker-negative",
+    };
+  }
+
+  return {
+    label: "สมดุลแล้ว",
+    kickerClass: "summary-balance-kicker-neutral",
+  };
 }
 
 function buildDetailSectionMarkup(
@@ -1224,14 +1327,18 @@ function updateSettlement() {
   }
 
   dom.noSettlementMsg.style.display = "none";
-  settlements.forEach((settlement) => {
+  settlements.forEach((settlement, index) => {
     const item = document.createElement("div");
     item.className = "settlement-item";
     item.innerHTML = `
+            <div class="settlement-order">${index + 1}</div>
+            <div class="settlement-main">
             <div class="settlement-text">
                 <span class="settlement-from">${settlement.from}</span>
                 <span class="settlement-arrow">→</span>
                 <span class="settlement-to">${settlement.to}</span>
+            </div>
+            <div class="settlement-caption">โอนให้จบได้เลยในรอบนี้</div>
             </div>
             <div class="settlement-amount">${formatAmount(settlement.amount)} บาท</div>
         `;
@@ -1489,9 +1596,18 @@ function updateShareUI() {
   updateShareErrorState();
   updateRemoteUpdateNotice();
 
-  dom.shareTripBtn.disabled = !canEdit() || appState.isSaving;
+  const shouldShowPrimaryShareAction = appState.mode === "local";
+
+  dom.shareTripBtn.classList.toggle("is-hidden", !shouldShowPrimaryShareAction);
+  dom.shareActions.classList.toggle(
+    "share-actions-compact",
+    !shouldShowPrimaryShareAction,
+  );
+  dom.shareTripBtn.disabled =
+    !shouldShowPrimaryShareAction || !canEdit() || appState.isSaving;
   dom.copyViewLinkBtn.disabled = !appState.shareLinks.viewUrl;
   dom.copyEditLinkBtn.disabled = !appState.shareLinks.editUrl || !canEdit();
+  dom.shareDescription.textContent = getShareSectionDescription();
   dom.shareTripBtn.textContent = getShareButtonLabel();
   dom.shareHint.textContent = getShareHintText();
   dom.shareTripBtn.title = getSharePrimaryActionTitle();
@@ -1521,7 +1637,7 @@ function getShareHintText() {
   }
 
   if (appState.hasRemoteUpdate && canEdit()) {
-    return "มี snapshot ใหม่บนเซิร์ฟเวอร์ ต้องกด Reload latest ก่อนจึงจะบันทึกต่อได้";
+    return "มี snapshot ใหม่บนเซิร์ฟเวอร์ โปรดโหลดเวอร์ชันล่าสุดก่อนแก้ไขต่อ";
   }
 
   if (appState.mode === "local") {
@@ -1532,7 +1648,19 @@ function getShareHintText() {
     return "ลิงก์นี้ดูได้อย่างเดียว ไม่สามารถแก้ไขหรือบันทึกข้อมูลได้";
   }
 
-  return "บันทึกทริปนี้ขึ้นเซิร์ฟเวอร์อัตโนมัติหลัง action ที่ commit แล้ว และคัดลอกลิงก์ได้จากปุ่มด้านล่าง";
+  return "ทุกการแก้ไขที่ commit แล้วจะซิงก์อัตโนมัติ และสามารถคัดลอกลิงก์ส่งต่อได้จากปุ่มด้านล่าง";
+}
+
+function getShareSectionDescription() {
+  if (appState.mode === "local") {
+    return "เมื่อพร้อมแล้ว สร้างลิงก์เพื่อให้คนอื่นเปิดดูหรือแก้ไขทริปร่วมกันได้ทันที";
+  }
+
+  if (appState.mode === "shared-view") {
+    return "ทริปนี้เปิดผ่านลิงก์ดูอย่างเดียว สามารถคัดลอกลิงก์ส่งต่อได้ แต่แก้ไขข้อมูลไม่ได้";
+  }
+
+  return "ทริปนี้กำลังซิงก์อัตโนมัติอยู่แล้ว ส่งต่อได้ทั้งลิงก์ดูอย่างเดียวและลิงก์แก้ไข";
 }
 
 function getSharePrimaryActionTitle() {
@@ -1562,7 +1690,7 @@ function updateModeBadge() {
     return;
   }
 
-  dom.tripModeBadge.textContent = "แก้ไขได้";
+  dom.tripModeBadge.textContent = "ซิงก์อัตโนมัติ";
   dom.tripModeBadge.classList.add("trip-mode-badge-edit");
 }
 
@@ -1593,9 +1721,15 @@ function updateSaveStatusText() {
     return;
   }
 
+  if (appState.isDirty) {
+    dom.saveStatusText.textContent = "รอบันทึกอัตโนมัติ...";
+    dom.saveStatusText.className = "save-status save-status-saving";
+    return;
+  }
+
   dom.saveStatusText.textContent = appState.lastSavedAt
-    ? `บันทึกล่าสุด ${new Date(appState.lastSavedAt).toLocaleString("th-TH")}`
-    : "พร้อมเชื่อมต่อ Supabase";
+    ? `ซิงก์ล่าสุด ${new Date(appState.lastSavedAt).toLocaleString("th-TH")}`
+    : "พร้อมซิงก์อัตโนมัติ";
   dom.saveStatusText.className = "save-status";
 }
 

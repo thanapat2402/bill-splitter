@@ -64,13 +64,61 @@
 
       <!-- Main Content -->
       <main class="main-content">
+        <section
+          id="firstStepGuide"
+          class="section first-step-section is-hidden"
+          aria-labelledby="firstStepHeading"
+        >
+          <p class="first-step-eyebrow">เริ่มต้นเร็ว</p>
+          <h2 id="firstStepHeading">เริ่มจากเพิ่มคนในทริปก่อน</h2>
+          <p class="section-description first-step-description">
+            พอมีสมาชิกแล้ว ฟอร์มเพิ่มรายการและสรุปการหารจะพร้อมทำงานทันที
+          </p>
+          <div class="first-step-actions">
+            <button id="focusAddPersonBtn" type="button" class="btn btn-primary">
+              เพิ่มคนก่อน
+            </button>
+            <button
+              id="loadDemoPresetGuideBtn"
+              type="button"
+              class="btn btn-secondary"
+            >
+              ลองด้วยข้อมูลตัวอย่าง
+            </button>
+          </div>
+          <div class="first-step-list" aria-label="ลำดับการเริ่มใช้งาน">
+            <div class="first-step-item">
+              <span class="first-step-number">1</span>
+              <div>
+                <strong>เพิ่มสมาชิก</strong>
+                <p>ใส่ชื่อคนในทริปให้ครบก่อน เพื่อให้เลือกคนจ่ายและคนที่ต้องหารได้</p>
+              </div>
+            </div>
+            <div class="first-step-item">
+              <span class="first-step-number">2</span>
+              <div>
+                <strong>ค่อยเพิ่มรายการค่าใช้จ่าย</strong>
+                <p>เลือกผู้จ่าย ยอดรวม และคนที่ต้องหาร ระบบจะคำนวณให้อัตโนมัติ</p>
+              </div>
+            </div>
+            <div class="first-step-item">
+              <span class="first-step-number">3</span>
+              <div>
+                <strong>ดูผลลัพธ์และแชร์ต่อ</strong>
+                <p>เช็กสรุปสุทธิว่าใครต้องโอนให้ใคร แล้วค่อยสร้างลิงก์แชร์</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <!-- Add Expense Section -->
         <section
+          id="addExpenseSection"
           class="section add-expense-section"
           aria-labelledby="addExpenseHeading"
         >
           <h2 id="addExpenseHeading">เพิ่มรายการใหม่</h2>
-          <p class="section-description">
+          <p id="addExpenseDescription" class="section-description">
             กรอกชื่อรายการ จำนวนเงิน และเลือกคนที่ต้องหาร
             ระบบจะคำนวณสรุปให้ทันที
           </p>
@@ -189,11 +237,12 @@
 
         <!-- Add Person Section -->
         <section
+          id="addPersonSection"
           class="section add-person-section"
           aria-labelledby="addPersonHeading"
         >
           <h2 id="addPersonHeading">เพิ่มคนในกลุ่ม</h2>
-          <p class="section-description">
+          <p id="addPersonDescription" class="section-description">
             เพิ่มสมาชิกก่อนเริ่มลงบิล เพื่อให้เลือกคนจ่ายและคนที่ต้องหารได้สะดวก
           </p>
           <form id="personForm" class="form-inline">
@@ -257,7 +306,7 @@
 
         <section class="section share-section" aria-labelledby="shareHeading">
           <h2 id="shareHeading">แชร์ทริป</h2>
-          <p class="section-description">
+          <p id="shareDescription" class="section-description">
             เมื่อพร้อมแล้ว
             สร้างลิงก์เพื่อให้คนอื่นเปิดดูหรือแก้ไขทริปร่วมกันได้ทันที
           </p>
@@ -294,7 +343,7 @@
               Reload latest
             </button>
           </div>
-          <div class="share-actions">
+          <div id="shareActions" class="share-actions">
             <button
               id="shareTripBtn"
               type="button"
