@@ -75,7 +75,7 @@ body {
     linear-gradient(135deg, rgba(124, 98, 71, 0.97), rgba(94, 71, 50, 0.94)),
     linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08));
   color: #fff9f1;
-  padding: 46px 34px 34px;
+  padding: 34px 34px 24px;
   text-align: left;
 }
 
@@ -84,7 +84,7 @@ body {
   flex-wrap: wrap;
   align-items: center;
   gap: 12px;
-  margin-bottom: 14px;
+  margin-bottom: 10px;
 }
 
 .header-brand {
@@ -106,7 +106,7 @@ body {
   align-items: center;
   gap: 10px;
   width: min(100%, 760px);
-  padding: 6px 0 10px;
+  padding: 2px 0 8px;
   border-bottom: 1px solid rgba(255, 249, 241, 0.14);
   transition:
     border-color 0.24s ease,
@@ -139,7 +139,7 @@ body {
 }
 
 .header-title-icon {
-  font-size: 1.9rem;
+  font-size: 1.65rem;
   line-height: 1;
   opacity: 0.88;
   transition:
@@ -221,30 +221,39 @@ body {
 }
 
 .header-caption {
-  margin-top: 12px;
   font-size: 0.9rem;
   color: rgba(255, 249, 241, 0.62);
+  max-width: 30rem;
+}
+
+.header-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 16px;
+  margin-top: 14px;
 }
 
 .header-shortcuts {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 18px;
+  gap: 8px;
 }
 
 .shortcut-chip {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 38px;
-  padding: 0 14px;
+  min-height: 34px;
+  padding: 0 13px;
   border-radius: 999px;
   border: 1px solid rgba(255, 249, 241, 0.16);
   background: rgba(255, 249, 241, 0.08);
   color: #fff9f1;
   text-decoration: none;
   font-weight: 600;
+  font-size: 0.95rem;
   transition:
     transform 0.18s ease,
     background-color 0.18s ease,
@@ -260,15 +269,15 @@ body {
 .overview-strip {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 16px;
-  padding: 20px 28px 0;
+  gap: 14px;
+  padding: 16px 28px 0;
 }
 
 .overview-card {
   display: grid;
-  gap: 4px;
-  padding: 18px 18px 16px;
-  border-radius: 18px;
+  gap: 3px;
+  padding: 15px 16px 14px;
+  border-radius: 16px;
   background: rgba(255, 253, 248, 0.88);
   border: 1px solid rgba(220, 204, 185, 0.92);
   box-shadow: var(--shadow-soft);
@@ -280,20 +289,20 @@ body {
 }
 
 .overview-label {
-  font-size: 0.82rem;
+  font-size: 0.76rem;
   text-transform: uppercase;
   letter-spacing: 0.12em;
   color: var(--text-light);
 }
 
 .overview-value {
-  font-size: 1.45rem;
+  font-size: 1.28rem;
   line-height: 1.1;
   color: var(--text-dark);
 }
 
 .overview-meta {
-  font-size: 0.9rem;
+  font-size: 0.82rem;
   color: var(--text-light);
 }
 
@@ -339,6 +348,55 @@ body {
 
 .section > h2[id] {
   scroll-margin-top: 28px;
+}
+
+.section-heading-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px 18px;
+}
+
+.section-heading-copy {
+  min-width: 0;
+  flex: 1 1 320px;
+}
+
+.section-heading-row .section-description {
+  margin-bottom: 0;
+}
+
+.section-heading-row h2 {
+  margin-bottom: 10px;
+}
+
+.section-heading-row-with-meta {
+  margin-bottom: 18px;
+}
+
+.section-meta-pills {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.section-meta-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: rgba(124, 98, 71, 0.08);
+  color: var(--text-light);
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.section-meta-pill-highlight {
+  background: rgba(214, 176, 117, 0.18);
+  color: var(--primary-strong);
 }
 
 .section-description {
@@ -868,6 +926,10 @@ body {
   border: 1px solid rgba(124, 98, 71, 0.14);
 }
 
+.expenses-section .empty-message {
+  margin-top: 4px;
+}
+
 .expense-item:hover {
   transform: translateY(-1px);
   border-color: rgba(124, 98, 71, 0.24);
@@ -1322,7 +1384,39 @@ body {
   flex-wrap: wrap;
   align-items: center;
   gap: 12px;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
+}
+
+.share-card-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(260px, 0.75fr);
+  gap: 14px;
+}
+
+.share-card-main,
+.share-card-actions-panel {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border-radius: calc(var(--radius) - 6px);
+  border: 1px solid rgba(124, 98, 71, 0.12);
+  background: rgba(255, 252, 246, 0.72);
+}
+
+.share-card-actions-panel {
+  align-content: start;
+  background: linear-gradient(
+    180deg,
+    rgba(247, 239, 226, 0.92),
+    rgba(255, 252, 246, 0.78)
+  );
+}
+
+.share-actions-label {
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--text-light);
 }
 
 .trip-mode-badge,
@@ -1417,9 +1511,13 @@ body {
 
 .share-actions {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
   align-items: start;
+}
+
+.share-actions > #shareTripBtn {
+  grid-column: 1 / -1;
 }
 
 .share-actions.share-actions-compact {
@@ -1431,7 +1529,7 @@ body {
 }
 
 .share-section .section-description {
-  margin-bottom: 10px;
+  max-width: 44rem;
 }
 
 .btn:disabled,
@@ -1459,7 +1557,6 @@ select:disabled {
 
 .actions-description {
   max-width: 580px;
-  margin: 0 0 14px;
 }
 
 .actions-layout {
@@ -1489,6 +1586,10 @@ select:disabled {
   color: var(--text-light);
 }
 
+.actions-section .section-heading-row {
+  margin-bottom: 14px;
+}
+
 .actions-buttons {
   display: flex;
   flex-wrap: wrap;
@@ -1510,13 +1611,32 @@ select:disabled {
     padding: 16px;
   }
 
+  .header {
+    padding: 26px 16px 18px;
+  }
+
+  .header-meta-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
   .overview-strip {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    padding: 18px 16px 0;
+    gap: 12px;
+    padding: 14px 16px 0;
   }
 
   .header-title-input {
     font-size: 1.85rem;
+  }
+
+  .header-shortcuts {
+    width: 100%;
+  }
+
+  .shortcut-chip {
+    flex: 1 1 auto;
   }
 
   .form-row-split {
@@ -1639,9 +1759,27 @@ select:disabled {
     grid-template-columns: 1fr;
   }
 
+  .section-heading-row,
+  .section-heading-row-with-meta {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .section-heading-copy {
+    flex: 0 1 auto;
+  }
+
+  .section-meta-pills {
+    justify-content: flex-start;
+  }
+
   .expense-item {
     grid-template-columns: 1fr;
     gap: 12px;
+  }
+
+  .share-card-layout {
+    grid-template-columns: 1fr;
   }
 
   .expense-name-row {
@@ -1717,6 +1855,24 @@ select:disabled {
   order: -3;
 }
 
+.is-onboarding .overview-strip {
+  gap: 10px;
+  padding-top: 12px;
+}
+
+.is-onboarding .overview-card {
+  gap: 2px;
+  padding: 12px 14px;
+}
+
+.is-onboarding .overview-value {
+  font-size: 1.12rem;
+}
+
+.is-onboarding .overview-meta {
+  font-size: 0.76rem;
+}
+
 .is-onboarding .add-person-section {
   order: -2;
   grid-column: 1 / -1;
@@ -1760,7 +1916,16 @@ select:disabled {
 
   .overview-strip {
     grid-template-columns: 1fr;
-    padding: 16px 14px 0;
+    gap: 10px;
+    padding: 12px 14px 0;
+  }
+
+  .header {
+    padding: 22px 14px 16px;
+  }
+
+  .header-meta-row {
+    gap: 8px;
   }
 
   .form-inline {

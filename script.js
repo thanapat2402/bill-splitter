@@ -134,6 +134,9 @@ const dom = {
   paidBySelect: document.getElementById("paidBy"),
   splitPersonsDiv: document.getElementById("splitPersons"),
   expensesList: document.getElementById("expensesList"),
+  expensesDescription: document.getElementById("expensesDescription"),
+  expensesCountMeta: document.getElementById("expensesCountMeta"),
+  expensesTotalMeta: document.getElementById("expensesTotalMeta"),
   noExpensesMsg: document.getElementById("noExpenses"),
   summaryContent: document.getElementById("summaryContent"),
   settlementContent: document.getElementById("settlementContent"),
@@ -882,6 +885,7 @@ function escapeQuotes(str) {
 function updateUI() {
   updateHeaderUI();
   updateOverviewUI();
+  updateExpensesSectionUI();
   updatePersonsList();
   updateCheckboxes();
   updatePaidBySelect();
@@ -892,6 +896,21 @@ function updateUI() {
   updateJourneyUI();
   updateActionsUI();
   updateShareUI();
+}
+
+function updateExpensesSectionUI() {
+  const expenseCount = data.expenses.length;
+  const totalAmount = roundCurrency(
+    data.expenses.reduce((sum, expense) => sum + expense.amount, 0),
+  );
+
+  dom.expensesCountMeta.textContent =
+    expenseCount === 0 ? "ยังไม่มีรายการ" : `${expenseCount} รายการ`;
+  dom.expensesTotalMeta.textContent = `${formatAmount(totalAmount)} บาท`;
+  dom.expensesDescription.textContent =
+    expenseCount === 0
+      ? "เมื่อเริ่มลงบิล รายการทั้งหมดจะมารวมที่นี่เพื่อให้ตรวจและลบได้ง่าย"
+      : "ดูรายการล่าสุดทั้งหมด และลบรายการที่ไม่ต้องการได้จากตรงนี้";
 }
 
 function updateJourneyUI() {

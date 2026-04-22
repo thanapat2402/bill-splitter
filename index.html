@@ -29,12 +29,14 @@
           />
           <span class="header-title-edit-icon" aria-hidden="true">✎</span>
         </div>
-        <p class="header-caption">แตะชื่อทริปเพื่อแก้ไขก่อนแชร์ลิงก์</p>
-        <nav class="header-shortcuts" aria-label="ทางลัด">
-          <a class="shortcut-chip" href="#addExpenseHeading">เพิ่มรายการ</a>
-          <a class="shortcut-chip" href="#summaryHeading">ดูสรุป</a>
-          <a class="shortcut-chip" href="#shareHeading">แชร์ทริป</a>
-        </nav>
+        <div class="header-meta-row">
+          <p class="header-caption">แตะชื่อทริปเพื่อแก้ไขก่อนแชร์ลิงก์</p>
+          <nav class="header-shortcuts" aria-label="ทางลัด">
+            <a class="shortcut-chip" href="#addExpenseHeading">เพิ่มรายการ</a>
+            <a class="shortcut-chip" href="#summaryHeading">ดูสรุป</a>
+            <a class="shortcut-chip" href="#shareHeading">แชร์ทริป</a>
+          </nav>
+        </div>
       </header>
 
       <section class="overview-strip" aria-label="ภาพรวมทริป">
@@ -301,7 +303,24 @@
           class="section expenses-section"
           aria-labelledby="expensesHeading"
         >
-          <h2 id="expensesHeading">รายการค่าใช้จ่าย</h2>
+          <div class="section-heading-row section-heading-row-with-meta">
+            <div class="section-heading-copy">
+              <h2 id="expensesHeading">รายการค่าใช้จ่าย</h2>
+              <p id="expensesDescription" class="section-description">
+                ดูรายการล่าสุดทั้งหมด และลบรายการที่ไม่ต้องการได้จากตรงนี้
+              </p>
+            </div>
+            <div class="section-meta-pills" aria-label="สถานะรายการค่าใช้จ่าย">
+              <span id="expensesCountMeta" class="section-meta-pill"
+                >0 รายการ</span
+              >
+              <span
+                id="expensesTotalMeta"
+                class="section-meta-pill section-meta-pill-highlight"
+                >0.00 บาท</span
+              >
+            </div>
+          </div>
           <div id="expensesList" class="expenses-list" aria-live="polite">
             <!-- Will be populated by JavaScript -->
           </div>
@@ -340,79 +359,104 @@
         </section>
 
         <section class="section share-section" aria-labelledby="shareHeading">
-          <h2 id="shareHeading">แชร์ทริป</h2>
-          <p id="shareDescription" class="section-description">
-            เมื่อพร้อมแล้ว
-            สร้างลิงก์เพื่อให้คนอื่นเปิดดูหรือแก้ไขทริปร่วมกันได้ทันที
-          </p>
-          <div id="tripStatusBar" class="trip-status-bar" aria-live="polite">
-            <span
-              id="tripModeBadge"
-              class="trip-mode-badge trip-mode-badge-local"
-              >โหมดในเครื่อง</span
-            >
-            <span id="saveStatusText" class="save-status">ยังไม่ได้แชร์</span>
-          </div>
-          <p id="shareHint" class="form-hint share-hint">
-            รอบนี้เตรียมโครงสำหรับแชร์ทริปและโหมดดูอย่างเดียวไว้ก่อน
-            แล้วค่อยเชื่อม Supabase ในขั้นถัดไป
-          </p>
-          <p
-            id="shareErrorState"
-            class="share-notice share-notice-error is-hidden"
-            role="alert"
-          ></p>
-          <div
-            id="remoteUpdateNotice"
-            class="share-notice share-notice-warning is-hidden"
-          >
-            <div class="share-notice-copy">
-              <strong>มีข้อมูลใหม่บนเซิร์ฟเวอร์</strong>
-              <span>โปรดโหลด snapshot ล่าสุดก่อนบันทึกต่อ</span>
+          <div class="section-heading-row">
+            <div class="section-heading-copy">
+              <h2 id="shareHeading">แชร์ทริป</h2>
+              <p id="shareDescription" class="section-description">
+                เมื่อพร้อมแล้ว
+                สร้างลิงก์เพื่อให้คนอื่นเปิดดูหรือแก้ไขทริปร่วมกันได้ทันที
+              </p>
             </div>
-            <button
-              id="reloadLatestBtn"
-              type="button"
-              class="btn btn-small btn-secondary"
-            >
-              Reload latest
-            </button>
           </div>
-          <div id="shareActions" class="share-actions">
-            <button
-              id="shareTripBtn"
-              type="button"
-              class="btn btn-secondary"
-              aria-describedby="shareHint"
-            >
-              สร้างลิงก์แชร์
-            </button>
-            <button
-              id="copyViewLinkBtn"
-              type="button"
-              class="btn btn-secondary"
-              disabled
-              aria-describedby="shareHint"
-            >
-              คัดลอกลิงก์ดูอย่างเดียว
-            </button>
-            <button
-              id="copyEditLinkBtn"
-              type="button"
-              class="btn btn-secondary"
-              disabled
-              aria-describedby="shareHint"
-            >
-              คัดลอกลิงก์แก้ไข
-            </button>
+          <div class="share-card-layout">
+            <div class="share-card-main">
+              <div
+                id="tripStatusBar"
+                class="trip-status-bar"
+                aria-live="polite"
+              >
+                <span
+                  id="tripModeBadge"
+                  class="trip-mode-badge trip-mode-badge-local"
+                  >โหมดในเครื่อง</span
+                >
+                <span id="saveStatusText" class="save-status"
+                  >ยังไม่ได้แชร์</span
+                >
+              </div>
+              <p id="shareHint" class="form-hint share-hint">
+                รอบนี้เตรียมโครงสำหรับแชร์ทริปและโหมดดูอย่างเดียวไว้ก่อน
+                แล้วค่อยเชื่อม Supabase ในขั้นถัดไป
+              </p>
+              <p
+                id="shareErrorState"
+                class="share-notice share-notice-error is-hidden"
+                role="alert"
+              ></p>
+              <div
+                id="remoteUpdateNotice"
+                class="share-notice share-notice-warning is-hidden"
+              >
+                <div class="share-notice-copy">
+                  <strong>มีข้อมูลใหม่บนเซิร์ฟเวอร์</strong>
+                  <span>โปรดโหลด snapshot ล่าสุดก่อนบันทึกต่อ</span>
+                </div>
+                <button
+                  id="reloadLatestBtn"
+                  type="button"
+                  class="btn btn-small btn-secondary"
+                >
+                  Reload latest
+                </button>
+              </div>
+            </div>
+            <div class="share-card-actions-panel">
+              <p class="share-actions-label">เครื่องมือแชร์</p>
+              <div id="shareActions" class="share-actions">
+                <button
+                  id="shareTripBtn"
+                  type="button"
+                  class="btn btn-secondary"
+                  aria-describedby="shareHint"
+                >
+                  สร้างลิงก์แชร์
+                </button>
+                <button
+                  id="copyViewLinkBtn"
+                  type="button"
+                  class="btn btn-secondary"
+                  disabled
+                  aria-describedby="shareHint"
+                >
+                  คัดลอกลิงก์ดูอย่างเดียว
+                </button>
+                <button
+                  id="copyEditLinkBtn"
+                  type="button"
+                  class="btn btn-secondary"
+                  disabled
+                  aria-describedby="shareHint"
+                >
+                  คัดลอกลิงก์แก้ไข
+                </button>
+              </div>
+            </div>
           </div>
         </section>
 
         <!-- Actions -->
-        <section class="section actions-section" aria-label="การจัดการข้อมูล">
-          <p class="section-description actions-description">
-            โหลดชุดเดโมเพื่อทดสอบ UX ได้ทันที หรือรีเซ็ตกลับเป็นทริปว่าง
-          </p>
+        <section
+          class="section actions-section"
+          aria-labelledby="actionsHeading"
+        >
+          <div class="section-heading-row">
+            <div class="section-heading-copy">
+              <h2 id="actionsHeading">การจัดการข้อมูล</h2>
+              <p class="section-description actions-description">
+                โหลดชุดเดโมเพื่อทดสอบ UX ได้ทันที หรือรีเซ็ตกลับเป็นทริปว่าง
+              </p>
+            </div>
+          </div>
           <div class="actions-layout">
             <div class="actions-group">
               <p class="actions-group-label">ทดลองใช้งาน</p>
