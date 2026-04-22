@@ -34,6 +34,12 @@ jobs:
           mkdir dist
           cp index.html dist/
           cp script.js dist/
+          cp trip-logic.js dist/
+          cp trip-ui.js dist/
+          cp expense-form.js dist/
+          cp trip-actions.js dist/
+          cp app-shell.js dist/
+          cp share-flow.js dist/
           cp style.css dist/
 
       - name: Upload artifact
