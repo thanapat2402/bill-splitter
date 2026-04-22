@@ -1484,11 +1484,7 @@ body {
 
 .share-card-actions-panel {
   align-content: start;
-  background: linear-gradient(
-    180deg,
-    rgba(247, 239, 226, 0.92),
-    rgba(255, 252, 246, 0.78)
-  );
+  background: rgba(251, 246, 238, 0.9);
 }
 
 .share-actions-label {
@@ -1590,17 +1586,15 @@ body {
 
 .share-actions {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: 1fr;
   gap: 10px;
   align-items: start;
 }
 
-.share-actions > #shareTripBtn {
-  grid-column: 1 / -1;
-}
-
 .share-actions .btn {
-  min-height: 44px;
+  width: 100%;
+  min-height: 46px;
+  justify-content: flex-start;
 }
 
 .share-section .section-description {
@@ -1642,8 +1636,8 @@ select:disabled {
 
 .actions-group {
   display: grid;
-  gap: 10px;
-  padding: 14px;
+  gap: 8px;
+  padding: 15px;
   border-radius: calc(var(--radius) - 8px);
   border: 1px solid rgba(124, 98, 71, 0.12);
   background: rgba(255, 252, 246, 0.7);
@@ -1666,9 +1660,7 @@ select:disabled {
 }
 
 .actions-buttons {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-start;
+  display: grid;
   gap: 10px;
 }
 
@@ -1677,7 +1669,20 @@ select:disabled {
 }
 
 .actions-buttons .btn {
-  min-height: 48px;
+  width: 100%;
+  min-height: 46px;
+  justify-content: flex-start;
+}
+
+.actions-helper-text {
+  margin-top: 0;
+  max-width: 34rem;
+}
+
+@media (max-width: 920px) {
+  .actions-layout {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* Responsive Design */

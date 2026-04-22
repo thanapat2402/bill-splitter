@@ -12,7 +12,7 @@ const SUPABASE_PUBLISHABLE_KEY =
 const REALTIME_SYNC_EVENT = "trip-updated";
 const PROJECT_NAME = "หารกัน";
 const DEFAULT_TRIP_TITLE = "แบ่งหารบิล";
-const SHORTCUT_SCROLL_DURATION_MS = 2400;
+const SHORTCUT_SCROLL_DURATION_MS = 1800;
 const SUMMARY_DETAIL_ANIMATION_FALLBACK_MS = 420;
 const DEMO_TRIP_PRESET = {
   schemaVersion: TRIP_SCHEMA_VERSION,
@@ -147,6 +147,8 @@ const dom = {
   settlementContent: document.getElementById("settlementContent"),
   noSettlementMsg: document.getElementById("noSettlement"),
   newTripBtn: document.getElementById("newTripBtn"),
+  newTripGroupLabel: document.getElementById("newTripGroupLabel"),
+  newTripHelperText: document.getElementById("newTripHelperText"),
   loadDemoPresetBtn: document.getElementById("loadDemoPresetBtn"),
   resetBtn: document.getElementById("resetBtn"),
   selectAllBtn: document.getElementById("selectAllBtn"),
@@ -163,6 +165,7 @@ const dom = {
   shareErrorState: document.getElementById("shareErrorState"),
   remoteUpdateNotice: document.getElementById("remoteUpdateNotice"),
   reloadLatestBtn: document.getElementById("reloadLatestBtn"),
+  actionsDescription: document.getElementById("actionsDescription"),
 };
 
 function bindEvents() {
@@ -712,7 +715,7 @@ function handleNewTripClick() {
 
   if (isSharedTrip) {
     const shouldCreateNewTrip = confirm(
-      "ต้องการออกจากลิงก์ปัจจุบันแล้วสร้างบิลใหม่หรือไม่? ข้อมูลในลิงก์เดิมจะไม่ถูกลบ",
+      "ต้องการแยกออกจากลิงก์ปัจจุบันแล้วเริ่มทริปใหม่ของคุณเองหรือไม่? ข้อมูลในลิงก์เดิมจะไม่ถูกลบ",
     );
 
     if (!shouldCreateNewTrip) {
@@ -720,7 +723,7 @@ function handleNewTripClick() {
     }
   } else if (hasContent) {
     const shouldCreateNewTrip = confirm(
-      "ต้องการสร้างบิลใหม่หรือไม่? ระบบจะเริ่มทริปว่างใหม่แทนข้อมูลปัจจุบัน",
+      "ต้องการสร้างทริปใหม่หรือไม่? ระบบจะเริ่มทริปว่างใหม่แทนข้อมูลปัจจุบัน",
     );
 
     if (!shouldCreateNewTrip) {
@@ -1148,12 +1151,21 @@ function setExpenseFormEnabled(isEnabled) {
 }
 
 function updateActionsUI() {
+  const isSharedTrip = isSharedMode() || Boolean(appState.shareToken);
   const canLoadDemoPreset = appState.mode === "local" && !appState.isSaving;
 
   dom.newTripBtn.disabled = appState.isSaving;
-  dom.newTripBtn.title = isSharedMode()
-    ? "ออกจากลิงก์ปัจจุบันแล้วเริ่มทริปว่างใหม่ในเครื่อง"
+  dom.newTripBtn.textContent = isSharedTrip ? "เริ่มทริปของฉัน" : "ทริปใหม่";
+  dom.newTripBtn.title = isSharedTrip
+    ? "แยกออกจากลิงก์ปัจจุบันแล้วเริ่มทริปใหม่ของคุณเองในเครื่อง"
     : "เริ่มทริปว่างใหม่ในเครื่อง";
+  dom.newTripGroupLabel.textContent = isSharedTrip ? "ทริปของฉัน" : "เริ่มใหม่";
+  dom.newTripHelperText.textContent = isSharedTrip
+    ? "ออกจากลิงก์เดิมแล้วเริ่มทริปของคุณเองได้ทันที โดยไม่แตะข้อมูลต้นฉบับ"
+    : "เริ่มทริปว่างใหม่ได้ทันที";
+  dom.actionsDescription.textContent = isSharedTrip
+    ? "ถ้าอยากแยกจากลิงก์นี้ไปทำของตัวเองต่อ เริ่มทริปใหม่ได้จากที่นี่"
+    : "เริ่มทริปใหม่อย่างเร็ว หรือโหลดเดโมไว้ลอง flow";
 
   dom.loadDemoPresetBtn.disabled = !canLoadDemoPreset;
   dom.loadDemoPresetGuideBtn.disabled = !canLoadDemoPreset;
@@ -1873,26 +1885,26 @@ function getShareHintText() {
   }
 
   if (appState.mode === "local") {
-    return "เลือกได้เลยว่าจะคัดลอกลิงก์แก้ไขหรือลิงก์ดูอย่างเดียว ระบบจะสร้าง shared trip และคัดลอกให้ทันที";
+    return "เลือกลิงก์ที่ต้องการ แล้วระบบจะสร้างและคัดลอกให้ทันที";
   }
 
   if (appState.mode === "shared-view") {
-    return "ลิงก์นี้ดูได้อย่างเดียว คุณคัดลอกลิงก์นี้ส่งต่อได้ แต่สร้างลิงก์แก้ไขใหม่จากหน้านี้ไม่ได้";
+    return "ลิงก์นี้ดูได้อย่างเดียว แต่ยังคัดลอกส่งต่อได้";
   }
 
-  return "ทุกการแก้ไขที่ commit แล้วจะซิงก์อัตโนมัติ และคุณคัดลอกลิงก์แก้ไขหรือดูล่าสุดได้ตลอด";
+  return "ทริปนี้ซิงก์อัตโนมัติ และคัดลอกลิงก์ส่งต่อได้ตลอด";
 }
 
 function getShareSectionDescription() {
   if (appState.mode === "local") {
-    return "เลือกชนิดลิงก์ที่ต้องการแชร์ได้ทันที ระบบจะสร้างทริปแชร์และคัดลอกลิงก์ให้ในครั้งเดียว";
+    return "เลือกชนิดลิงก์ แล้วคัดลอกได้ทันที";
   }
 
   if (appState.mode === "shared-view") {
-    return "คุณกำลังเปิดทริปผ่านลิงก์ดูอย่างเดียว และคัดลอกลิงก์นี้ส่งต่อได้";
+    return "คุณกำลังเปิดผ่านลิงก์ดูอย่างเดียว";
   }
 
-  return "ทริปนี้กำลังซิงก์อัตโนมัติอยู่แล้ว และพร้อมส่งต่อทั้งลิงก์ดูอย่างเดียวกับลิงก์แก้ไข";
+  return "ทริปนี้ซิงก์อัตโนมัติ และพร้อมส่งต่อ";
 }
 
 function getSharePrimaryActionTitle() {

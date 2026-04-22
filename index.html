@@ -493,14 +493,19 @@
           <div class="section-heading-row">
             <div class="section-heading-copy">
               <h2 id="actionsHeading">การจัดการข้อมูล</h2>
-              <p class="section-description actions-description">
+              <p
+                id="actionsDescription"
+                class="section-description actions-description"
+              >
                 โหลดชุดเดโมเพื่อทดสอบ UX ได้ทันที หรือรีเซ็ตกลับเป็นทริปว่าง
               </p>
             </div>
           </div>
           <div class="actions-layout">
             <div class="actions-group">
-              <p class="actions-group-label">ทดลองใช้งาน</p>
+              <p id="newTripGroupLabel" class="actions-group-label">
+                ทดลองใช้งาน
+              </p>
               <div class="actions-buttons">
                 <button id="newTripBtn" class="btn btn-secondary">
                   สร้างบิลใหม่
@@ -509,6 +514,9 @@
                   โหลดเดโมตัวอย่าง
                 </button>
               </div>
+              <p id="newTripHelperText" class="form-hint actions-helper-text">
+                เริ่มทริปว่างใหม่ในเครื่องโดยไม่กระทบข้อมูลที่แชร์อยู่
+              </p>
             </div>
             <div class="actions-group actions-group-danger">
               <p class="actions-group-label">ล้างข้อมูล</p>
