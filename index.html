@@ -34,7 +34,50 @@
           <nav class="header-shortcuts" aria-label="ทางลัด">
             <a class="shortcut-chip" href="#addExpenseHeading">เพิ่มรายการ</a>
             <a class="shortcut-chip" href="#summaryHeading">ดูสรุป</a>
-            <a class="shortcut-chip" href="#shareHeading">แชร์ทริป</a>
+            <div class="shortcut-menu">
+              <button
+                id="headerShareMenuBtn"
+                type="button"
+                class="shortcut-chip shortcut-chip-button"
+                aria-haspopup="menu"
+                aria-expanded="false"
+                aria-controls="headerShareMenu"
+              >
+                แชร์ลิงก์
+                <span class="shortcut-menu-caret" aria-hidden="true">▾</span>
+              </button>
+              <div
+                id="headerShareMenu"
+                class="shortcut-menu-panel is-hidden"
+                role="menu"
+                aria-labelledby="headerShareMenuBtn"
+              >
+                <button
+                  id="headerShareEditBtn"
+                  type="button"
+                  class="shortcut-menu-item"
+                  role="menuitem"
+                >
+                  <span class="shortcut-menu-item-label">คัดลอกลิงก์แก้ไข</span>
+                  <span class="shortcut-menu-item-hint"
+                    >ส่งให้คนที่ต้องช่วยเพิ่มหรือแก้บิล</span
+                  >
+                </button>
+                <button
+                  id="headerShareViewBtn"
+                  type="button"
+                  class="shortcut-menu-item"
+                  role="menuitem"
+                >
+                  <span class="shortcut-menu-item-label"
+                    >คัดลอกลิงก์ดูอย่างเดียว</span
+                  >
+                  <span class="shortcut-menu-item-hint"
+                    >ส่งให้คนที่ต้องการเปิดดูสรุปอย่างเดียว</span
+                  >
+                </button>
+              </div>
+            </div>
           </nav>
         </div>
       </header>
@@ -411,7 +454,7 @@
               </div>
             </div>
             <div class="share-card-actions-panel">
-              <p class="share-actions-label">เครื่องมือแชร์</p>
+              <p class="share-actions-label">คัดลอกลิงก์แชร์</p>
               <div id="shareActions" class="share-actions">
                 <button
                   id="shareTripBtn"
@@ -419,13 +462,12 @@
                   class="btn btn-secondary"
                   aria-describedby="shareHint"
                 >
-                  สร้างลิงก์แชร์
+                  บันทึกตอนนี้
                 </button>
                 <button
                   id="copyViewLinkBtn"
                   type="button"
                   class="btn btn-secondary"
-                  disabled
                   aria-describedby="shareHint"
                 >
                   คัดลอกลิงก์ดูอย่างเดียว
@@ -434,7 +476,6 @@
                   id="copyEditLinkBtn"
                   type="button"
                   class="btn btn-secondary"
-                  disabled
                   aria-describedby="shareHint"
                 >
                   คัดลอกลิงก์แก้ไข

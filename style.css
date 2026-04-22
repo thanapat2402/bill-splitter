@@ -241,6 +241,10 @@ body {
   gap: 8px;
 }
 
+.shortcut-menu {
+  position: relative;
+}
+
 .shortcut-chip {
   display: inline-flex;
   align-items: center;
@@ -260,10 +264,85 @@ body {
     border-color 0.18s ease;
 }
 
+.shortcut-chip-button {
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.shortcut-menu-caret {
+  margin-left: 8px;
+  font-size: 0.76rem;
+  opacity: 0.82;
+}
+
 .shortcut-chip:hover {
   transform: translateY(-1px);
   background: rgba(255, 249, 241, 0.14);
   border-color: rgba(255, 249, 241, 0.28);
+}
+
+.shortcut-chip-button[aria-expanded="true"] {
+  background: rgba(255, 249, 241, 0.16);
+  border-color: rgba(255, 249, 241, 0.3);
+}
+
+.shortcut-menu-panel {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 20;
+  min-width: min(320px, calc(100vw - 32px));
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 249, 241, 0.14);
+  background: rgba(60, 44, 30, 0.96);
+  box-shadow: 0 18px 42px rgba(24, 16, 10, 0.34);
+  backdrop-filter: blur(12px);
+}
+
+.shortcut-menu-item {
+  display: grid;
+  gap: 4px;
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid rgba(255, 249, 241, 0.08);
+  border-radius: 14px;
+  background: rgba(255, 249, 241, 0.04);
+  color: #fff9f1;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+  transition:
+    transform 0.18s ease,
+    background-color 0.18s ease,
+    border-color 0.18s ease,
+    opacity 0.18s ease;
+}
+
+.shortcut-menu-item:hover:not(:disabled),
+.shortcut-menu-item:focus-visible:not(:disabled) {
+  transform: translateY(-1px);
+  background: rgba(255, 249, 241, 0.09);
+  border-color: rgba(214, 176, 117, 0.34);
+  outline: none;
+}
+
+.shortcut-menu-item:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.shortcut-menu-item-label {
+  font-size: 0.94rem;
+  font-weight: 700;
+}
+
+.shortcut-menu-item-hint {
+  font-size: 0.78rem;
+  line-height: 1.4;
+  color: rgba(255, 249, 241, 0.68);
 }
 
 .overview-strip {
@@ -1520,10 +1599,6 @@ body {
   grid-column: 1 / -1;
 }
 
-.share-actions.share-actions-compact {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
 .share-actions .btn {
   min-height: 44px;
 }
@@ -1637,6 +1712,20 @@ select:disabled {
 
   .shortcut-chip {
     flex: 1 1 auto;
+  }
+
+  .shortcut-menu {
+    flex: 1 1 100%;
+  }
+
+  .shortcut-chip-button {
+    width: 100%;
+  }
+
+  .shortcut-menu-panel {
+    left: 0;
+    right: auto;
+    min-width: 100%;
   }
 
   .form-row-split {

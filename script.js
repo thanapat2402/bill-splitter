@@ -100,6 +100,7 @@ const appState = {
     viewUrl: "",
     editUrl: "",
   },
+  isHeaderShareMenuOpen: false,
 };
 
 let supabaseModulePromise = null;
@@ -114,6 +115,10 @@ const dom = {
   shortcutLinks: Array.from(
     document.querySelectorAll('.shortcut-chip[href^="#"]'),
   ),
+  headerShareMenuBtn: document.getElementById("headerShareMenuBtn"),
+  headerShareMenu: document.getElementById("headerShareMenu"),
+  headerShareEditBtn: document.getElementById("headerShareEditBtn"),
+  headerShareViewBtn: document.getElementById("headerShareViewBtn"),
   overviewPersonsCount: document.getElementById("overviewPersonsCount"),
   overviewExpensesCount: document.getElementById("overviewExpensesCount"),
   overviewTotalAmount: document.getElementById("overviewTotalAmount"),
@@ -169,6 +174,15 @@ function bindEvents() {
   dom.shortcutLinks.forEach((link) => {
     link.addEventListener("click", handleShortcutClick);
   });
+  dom.headerShareMenuBtn.addEventListener("click", toggleHeaderShareMenu);
+  dom.headerShareEditBtn.addEventListener("click", () => {
+    void handleShareLinkAction("edit", { closeMenu: true });
+  });
+  dom.headerShareViewBtn.addEventListener("click", () => {
+    void handleShareLinkAction("view", { closeMenu: true });
+  });
+  document.addEventListener("click", handleDocumentClick);
+  document.addEventListener("keydown", handleDocumentKeydown);
   dom.loadDemoPresetGuideBtn.addEventListener(
     "click",
     handleLoadDemoPresetClick,
@@ -188,9 +202,48 @@ function bindEvents() {
   dom.subExpensesContainer.addEventListener("click", handleSubExpenseAction);
   dom.summaryContent.addEventListener("click", handleSummaryDetailToggle);
   dom.shareTripBtn.addEventListener("click", handleShareTripClick);
-  dom.copyViewLinkBtn.addEventListener("click", handleCopyViewLinkClick);
-  dom.copyEditLinkBtn.addEventListener("click", handleCopyEditLinkClick);
+  dom.copyViewLinkBtn.addEventListener("click", () => {
+    void handleShareLinkAction("view");
+  });
+  dom.copyEditLinkBtn.addEventListener("click", () => {
+    void handleShareLinkAction("edit");
+  });
   dom.reloadLatestBtn.addEventListener("click", handleReloadLatestClick);
+}
+
+function toggleHeaderShareMenu() {
+  if (dom.headerShareMenuBtn.disabled) {
+    return;
+  }
+
+  setHeaderShareMenuOpen(!appState.isHeaderShareMenuOpen);
+}
+
+function setHeaderShareMenuOpen(isOpen) {
+  appState.isHeaderShareMenuOpen = isOpen;
+  dom.headerShareMenuBtn.setAttribute("aria-expanded", String(isOpen));
+  dom.headerShareMenu.classList.toggle("is-hidden", !isOpen);
+}
+
+function handleDocumentClick(event) {
+  if (
+    !appState.isHeaderShareMenuOpen ||
+    dom.headerShareMenu.contains(event.target) ||
+    dom.headerShareMenuBtn.contains(event.target)
+  ) {
+    return;
+  }
+
+  setHeaderShareMenuOpen(false);
+}
+
+function handleDocumentKeydown(event) {
+  if (event.key !== "Escape" || !appState.isHeaderShareMenuOpen) {
+    return;
+  }
+
+  setHeaderShareMenuOpen(false);
+  dom.headerShareMenuBtn.focus();
 }
 
 function handleFocusAddPersonClick() {
@@ -341,6 +394,100 @@ function handleShortcutClick(event) {
 
   smoothScrollToElement(targetElement, SHORTCUT_SCROLL_DURATION_MS);
   history.replaceState(null, "", targetId);
+}
+
+function isShareRoleAllowed(role) {
+  if (role === "view") {
+    return true;
+  }
+
+  return canEdit();
+}
+
+function getShareRoleLabel(role) {
+  return role === "edit" ? "ลิงก์แก้ไข" : "ลิงก์ดูอย่างเดียว";
+}
+
+function getShareLinkByRole(role) {
+  return role === "edit"
+    ? appState.shareLinks.editUrl
+    : appState.shareLinks.viewUrl;
+}
+
+async function copyTextToClipboard(text) {
+  if (navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(text);
+    return true;
+  }
+
+  const helperTextarea = document.createElement("textarea");
+  helperTextarea.value = text;
+  helperTextarea.setAttribute("readonly", "");
+  helperTextarea.style.position = "absolute";
+  helperTextarea.style.left = "-9999px";
+  document.body.appendChild(helperTextarea);
+  helperTextarea.select();
+
+  try {
+    return document.execCommand("copy");
+  } finally {
+    document.body.removeChild(helperTextarea);
+  }
+}
+
+async function ensureShareTripReady() {
+  if (appState.tripId) {
+    return true;
+  }
+
+  if (!canEdit()) {
+    alert("ลิงก์นี้เป็นโหมดดูอย่างเดียว");
+    return false;
+  }
+
+  const result = await createSharedTrip({ notifyOnSuccess: false });
+  return Boolean(result);
+}
+
+async function handleShareLinkAction(role, options = {}) {
+  const { closeMenu = false } = options;
+
+  if (closeMenu) {
+    setHeaderShareMenuOpen(false);
+  }
+
+  if (!isShareRoleAllowed(role)) {
+    alert("ลิงก์นี้เป็นโหมดดูอย่างเดียว");
+    return;
+  }
+
+  const isReady = await ensureShareTripReady();
+
+  if (!isReady) {
+    return;
+  }
+
+  const url = getShareLinkByRole(role);
+
+  if (!url) {
+    alert(`ยังไม่มี${getShareRoleLabel(role)}`);
+    return;
+  }
+
+  try {
+    const copied = await copyTextToClipboard(url);
+
+    if (copied) {
+      alert(`คัดลอก${getShareRoleLabel(role)}แล้ว`);
+      return;
+    }
+  } catch {
+    // Fall through to the manual-copy message below.
+  }
+
+  alert(
+    `สร้าง${getShareRoleLabel(role)}แล้ว แต่คัดลอกอัตโนมัติไม่สำเร็จ\n${url}`,
+  );
 }
 
 function smoothScrollToElement(targetElement, durationMs) {
@@ -1664,44 +1811,56 @@ function updateShareUI() {
   updateShareErrorState();
   updateRemoteUpdateNotice();
 
-  const shouldShowPrimaryShareAction = appState.mode === "local";
-  const shouldShowViewCopyAction = Boolean(appState.shareLinks.viewUrl);
-  const shouldShowEditCopyAction =
-    Boolean(appState.shareLinks.editUrl) && appState.mode === "shared-edit";
+  const isLocalMode = appState.mode === "local";
+  const isSharedEditMode = appState.mode === "shared-edit";
+  const isSharedViewMode = appState.mode === "shared-view";
+  const canCreateLinks = (isLocalMode || isSharedEditMode) && canEdit();
 
-  dom.shareTripBtn.classList.toggle("is-hidden", !shouldShowPrimaryShareAction);
-  dom.copyViewLinkBtn.classList.toggle("is-hidden", !shouldShowViewCopyAction);
-  dom.copyEditLinkBtn.classList.toggle("is-hidden", !shouldShowEditCopyAction);
-  dom.shareActions.classList.toggle(
-    "share-actions-compact",
-    !shouldShowPrimaryShareAction,
-  );
-  dom.shareTripBtn.disabled =
-    !shouldShowPrimaryShareAction || !canEdit() || appState.isSaving;
-  dom.copyViewLinkBtn.disabled = !appState.shareLinks.viewUrl;
-  dom.copyEditLinkBtn.disabled = !appState.shareLinks.editUrl || !canEdit();
+  dom.shareTripBtn.classList.toggle("is-hidden", !isSharedEditMode);
+  dom.copyViewLinkBtn.classList.toggle("is-hidden", false);
+  dom.copyEditLinkBtn.classList.toggle("is-hidden", isSharedViewMode);
+  dom.shareTripBtn.disabled = !isSharedEditMode || appState.isSaving;
+  dom.copyViewLinkBtn.disabled =
+    appState.isSaving || (!canCreateLinks && !appState.shareLinks.viewUrl);
+  dom.copyEditLinkBtn.disabled =
+    appState.isSaving || isSharedViewMode || !canCreateLinks;
   dom.shareDescription.textContent = getShareSectionDescription();
   dom.shareTripBtn.textContent = getShareButtonLabel();
   dom.shareHint.textContent = getShareHintText();
   dom.shareTripBtn.title = getSharePrimaryActionTitle();
-  dom.copyViewLinkBtn.title = appState.shareLinks.viewUrl
-    ? "คัดลอกลิงก์สำหรับส่งให้คนที่ดูได้อย่างเดียว"
-    : "สร้างทริปแชร์ก่อนจึงจะคัดลอกลิงก์ดูอย่างเดียวได้";
-  dom.copyEditLinkBtn.title = appState.shareLinks.editUrl
-    ? "คัดลอกลิงก์สำหรับคนที่ต้องช่วยแก้ไขทริป"
-    : "สร้างทริปแชร์ก่อนจึงจะคัดลอกลิงก์แก้ไขได้";
+  dom.copyViewLinkBtn.title = isLocalMode
+    ? "สร้างลิงก์ดูอย่างเดียวและคัดลอกทันที"
+    : "คัดลอกลิงก์สำหรับส่งให้คนที่ดูได้อย่างเดียว";
+  dom.copyEditLinkBtn.title = isSharedViewMode
+    ? "ลิงก์นี้เป็นโหมดดูอย่างเดียว"
+    : isLocalMode
+      ? "สร้างลิงก์แก้ไขและคัดลอกทันที"
+      : "คัดลอกลิงก์สำหรับคนที่ต้องช่วยแก้ไขทริป";
+  dom.headerShareMenuBtn.disabled = appState.isSaving;
+  dom.headerShareMenuBtn.title = getHeaderShareButtonTitle();
+  dom.headerShareEditBtn.disabled = appState.isSaving || !canCreateLinks;
+  dom.headerShareViewBtn.disabled =
+    appState.isSaving || (!canCreateLinks && !appState.shareLinks.viewUrl);
+  dom.headerShareEditBtn.title = isSharedViewMode
+    ? "ลิงก์นี้เป็นโหมดดูอย่างเดียว จึงคัดลอกลิงก์แก้ไขไม่ได้"
+    : isLocalMode
+      ? "สร้างลิงก์แก้ไขและคัดลอกทันที"
+      : "คัดลอกลิงก์แก้ไขปัจจุบัน";
+  dom.headerShareViewBtn.title = isLocalMode
+    ? "สร้างลิงก์ดูอย่างเดียวและคัดลอกทันที"
+    : "คัดลอกลิงก์ดูอย่างเดียวปัจจุบัน";
+
+  if (appState.isSaving) {
+    setHeaderShareMenuOpen(false);
+  }
 }
 
 function getShareButtonLabel() {
-  if (appState.mode === "local") {
-    return "สร้างลิงก์แชร์";
-  }
-
   if (appState.mode === "shared-edit") {
     return "บันทึกตอนนี้";
   }
 
-  return "ดูอย่างเดียว";
+  return "บันทึกตอนนี้";
 }
 
 function getShareHintText() {
@@ -1714,19 +1873,19 @@ function getShareHintText() {
   }
 
   if (appState.mode === "local") {
-    return "พร้อมเมื่อไรค่อยสร้างลิงก์ แล้วส่งต่อให้เพื่อนในทริปได้ทันที";
+    return "เลือกได้เลยว่าจะคัดลอกลิงก์แก้ไขหรือลิงก์ดูอย่างเดียว ระบบจะสร้าง shared trip และคัดลอกให้ทันที";
   }
 
   if (appState.mode === "shared-view") {
-    return "ลิงก์นี้ดูได้อย่างเดียว ส่งต่อได้ แต่แก้ไขข้อมูลไม่ได้";
+    return "ลิงก์นี้ดูได้อย่างเดียว คุณคัดลอกลิงก์นี้ส่งต่อได้ แต่สร้างลิงก์แก้ไขใหม่จากหน้านี้ไม่ได้";
   }
 
-  return "ทุกการแก้ไขที่ commit แล้วจะซิงก์อัตโนมัติ และคัดลอกลิงก์ส่งต่อได้ทันที";
+  return "ทุกการแก้ไขที่ commit แล้วจะซิงก์อัตโนมัติ และคุณคัดลอกลิงก์แก้ไขหรือดูล่าสุดได้ตลอด";
 }
 
 function getShareSectionDescription() {
   if (appState.mode === "local") {
-    return "สร้างลิงก์ครั้งเดียว แล้วส่งต่อให้เพื่อนเปิดดูหรือช่วยแก้ไขได้ทันที";
+    return "เลือกชนิดลิงก์ที่ต้องการแชร์ได้ทันที ระบบจะสร้างทริปแชร์และคัดลอกลิงก์ให้ในครั้งเดียว";
   }
 
   if (appState.mode === "shared-view") {
@@ -1737,15 +1896,23 @@ function getShareSectionDescription() {
 }
 
 function getSharePrimaryActionTitle() {
-  if (!canEdit()) {
-    return "ลิงก์นี้เป็นโหมดดูอย่างเดียว";
+  return "บันทึก snapshot ล่าสุดขึ้นเซิร์ฟเวอร์ทันที";
+}
+
+function getHeaderShareButtonTitle() {
+  if (appState.isSaving) {
+    return "กำลังสร้างหรือซิงก์ลิงก์แชร์";
   }
 
   if (appState.mode === "local") {
-    return "สร้าง shared trip และออกลิงก์ดูอย่างเดียวกับลิงก์แก้ไข";
+    return "เลือกลิงก์ที่ต้องการคัดลอก ระบบจะสร้าง shared trip ให้ทันที";
   }
 
-  return "บันทึก snapshot ล่าสุดขึ้นเซิร์ฟเวอร์ทันที";
+  if (appState.mode === "shared-view") {
+    return "คัดลอกลิงก์ดูอย่างเดียวจากเมนูนี้ได้";
+  }
+
+  return "เลือกลิงก์แก้ไขหรือลิงก์ดูอย่างเดียวเพื่อคัดลอกได้ทันที";
 }
 
 function updateModeBadge() {
@@ -1827,13 +1994,7 @@ function updateRemoteUpdateNotice() {
 }
 
 function handleShareTripClick() {
-  if (!canEdit()) {
-    alert("ลิงก์นี้เป็นโหมดดูอย่างเดียว");
-    return;
-  }
-
-  if (!appState.tripId) {
-    void createSharedTrip();
+  if (appState.mode !== "shared-edit") {
     return;
   }
 
@@ -1846,24 +2007,6 @@ function handleReloadLatestClick() {
   }
 
   void loadSharedTrip(appState.shareToken, { notifyOnError: true });
-}
-
-async function handleCopyViewLinkClick() {
-  if (!appState.shareLinks.viewUrl) {
-    return;
-  }
-
-  await navigator.clipboard.writeText(appState.shareLinks.viewUrl);
-  alert("คัดลอกลิงก์ดูอย่างเดียวแล้ว");
-}
-
-async function handleCopyEditLinkClick() {
-  if (!appState.shareLinks.editUrl) {
-    return;
-  }
-
-  await navigator.clipboard.writeText(appState.shareLinks.editUrl);
-  alert("คัดลอกลิงก์แก้ไขแล้ว");
 }
 
 function scheduleAutosave() {
@@ -2153,7 +2296,9 @@ async function pollTripVersion() {
   }
 }
 
-async function createSharedTrip() {
+async function createSharedTrip(options = {}) {
+  const { notifyOnSuccess = true } = options;
+
   setSavingState(true);
   setSaveError("");
   updateShareUI();
@@ -2178,10 +2323,15 @@ async function createSharedTrip() {
     replaceUrlIfPossible(result.editUrl);
     updateUI();
     void broadcastTripUpdate(result.version, result.updatedAt);
-    alert("สร้างลิงก์แชร์สำเร็จแล้ว");
+    if (notifyOnSuccess) {
+      alert("สร้างลิงก์แชร์สำเร็จแล้ว");
+    }
+
+    return result;
   } catch (error) {
     setSaveError(getRequestErrorMessage(error, "create"));
     updateShareUI();
+    return null;
   } finally {
     setSavingState(false);
     updateShareUI();
