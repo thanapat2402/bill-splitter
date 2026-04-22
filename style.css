@@ -1485,6 +1485,24 @@ select:disabled {
     grid-column: auto;
   }
 
+  .add-expense-section .form {
+    gap: 12px;
+  }
+
+  .add-expense-section .form-row {
+    gap: 12px;
+  }
+
+  .add-expense-section .form-group {
+    gap: 6px;
+  }
+
+  .add-expense-section .section-description,
+  .add-expense-section .form-hint {
+    font-size: 0.84rem;
+    line-height: 1.45;
+  }
+
   .form-inline {
     flex-direction: column;
     align-items: stretch;
@@ -1502,6 +1520,12 @@ select:disabled {
     grid-template-columns: 1fr;
   }
 
+  .sub-expenses-panel {
+    gap: 10px;
+    margin-top: 10px;
+    padding: 12px;
+  }
+
   .sub-expense-actions {
     grid-template-columns: 1fr;
   }
@@ -1512,6 +1536,12 @@ select:disabled {
 
   .checkbox-group {
     grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  .checkbox-item {
+    padding: 9px 10px;
   }
 
   .persons-list {
@@ -1658,6 +1688,18 @@ select:disabled {
     padding: 16px;
   }
 
+  .add-expense-section .form {
+    gap: 10px;
+  }
+
+  .add-expense-section .form-row {
+    gap: 10px;
+  }
+
+  .add-expense-section .form-group label {
+    font-size: 0.88rem;
+  }
+
   .section h2 {
     font-size: 1.1rem;
     margin-bottom: 15px;
@@ -1673,8 +1715,40 @@ select:disabled {
     font-size: 16px; /* Prevents zoom on iOS */
   }
 
+  .add-expense-section .form-group input,
+  .add-expense-section .form-group select {
+    padding: 9px 10px;
+  }
+
+  .add-expense-section .btn-small {
+    padding: 9px 12px;
+    font-size: 0.84rem;
+  }
+
+  .add-expense-section .accordion-toggle-content {
+    gap: 2px;
+  }
+
+  .add-expense-section .accordion-toggle-summary {
+    font-size: 0.75rem;
+  }
+
+  .split-buttons {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    margin-top: 6px;
+    margin-bottom: 8px;
+  }
+
   .checkbox-group {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .checkbox-item {
+    min-height: 42px;
+    padding: 8px 10px;
+    font-size: 0.9rem;
   }
 
   .persons-list {
@@ -1740,5 +1814,12 @@ select:disabled {
   .settlement-amount {
     font-size: 1.1rem;
     justify-self: start;
+  }
+}
+
+@media (max-width: 380px) {
+  .split-buttons,
+  .checkbox-group {
+    grid-template-columns: 1fr;
   }
 }
