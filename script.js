@@ -141,6 +141,7 @@ const dom = {
   summaryContent: document.getElementById("summaryContent"),
   settlementContent: document.getElementById("settlementContent"),
   noSettlementMsg: document.getElementById("noSettlement"),
+  newTripBtn: document.getElementById("newTripBtn"),
   loadDemoPresetBtn: document.getElementById("loadDemoPresetBtn"),
   resetBtn: document.getElementById("resetBtn"),
   selectAllBtn: document.getElementById("selectAllBtn"),
@@ -172,6 +173,7 @@ function bindEvents() {
     "click",
     handleLoadDemoPresetClick,
   );
+  dom.newTripBtn.addEventListener("click", handleNewTripClick);
   dom.loadDemoPresetBtn.addEventListener("click", handleLoadDemoPresetClick);
   dom.resetBtn.addEventListener("click", resetAll);
   dom.selectAllBtn.addEventListener("click", selectAllPersons);
@@ -554,6 +556,49 @@ function resetAll() {
   clearTripData();
   clearTransientForms();
   markDirty();
+  updateUI();
+}
+
+function handleNewTripClick() {
+  const isSharedTrip = isSharedMode() || Boolean(appState.shareToken);
+  const hasContent = hasAnyTripContent();
+
+  if (isSharedTrip) {
+    const shouldCreateNewTrip = confirm(
+      "ต้องการออกจากลิงก์ปัจจุบันแล้วสร้างบิลใหม่หรือไม่? ข้อมูลในลิงก์เดิมจะไม่ถูกลบ",
+    );
+
+    if (!shouldCreateNewTrip) {
+      return;
+    }
+  } else if (hasContent) {
+    const shouldCreateNewTrip = confirm(
+      "ต้องการสร้างบิลใหม่หรือไม่? ระบบจะเริ่มทริปว่างใหม่แทนข้อมูลปัจจุบัน",
+    );
+
+    if (!shouldCreateNewTrip) {
+      return;
+    }
+  }
+
+  clearAutosaveTimer();
+  clearTripData();
+  clearTransientForms();
+  clearDirty();
+  setSaveError("");
+  setLoadError("");
+  setSavingState(false);
+  setRemoteUpdateState(false);
+  appState.tripId = null;
+  appState.shareToken = "";
+  appState.role = "edit";
+  appState.version = null;
+  appState.lastSavedAt = "";
+  appState.shareLinks.viewUrl = "";
+  appState.shareLinks.editUrl = "";
+  setAppMode("local", "edit");
+
+  replaceUrlIfPossible(window.location.pathname);
   updateUI();
 }
 
@@ -957,6 +1002,11 @@ function setExpenseFormEnabled(isEnabled) {
 
 function updateActionsUI() {
   const canLoadDemoPreset = appState.mode === "local" && !appState.isSaving;
+
+  dom.newTripBtn.disabled = appState.isSaving;
+  dom.newTripBtn.title = isSharedMode()
+    ? "ออกจากลิงก์ปัจจุบันแล้วเริ่มทริปว่างใหม่ในเครื่อง"
+    : "เริ่มทริปว่างใหม่ในเครื่อง";
 
   dom.loadDemoPresetBtn.disabled = !canLoadDemoPreset;
   dom.loadDemoPresetGuideBtn.disabled = !canLoadDemoPreset;
