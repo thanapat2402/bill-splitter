@@ -9,11 +9,11 @@ html {
 }
 
 :root {
-  --primary-color: #4e7a4e;
-  --primary-strong: #315c31;
+  --primary-color: #7c6247;
+  --primary-strong: #5e4732;
   --accent-color: #d6b075;
-  --secondary-color: #8aaa7a;
-  --success-color: #3d6e2a;
+  --secondary-color: #b59b7b;
+  --success-color: #4f7a3f;
   --danger-color: #bb2f1f;
   --danger-button-color: #e9c2bb;
   --danger-button-hover: #e2b1a8;
@@ -25,11 +25,11 @@ html {
   --surface-strong: #efe3d3;
   --border-color: #dcccb9;
   --text-dark: #2f271f;
-  --text-light: #6b7355;
+  --text-light: #7b6b5c;
   --radius: 22px;
   --radius-small: 16px;
-  --shadow: 0 18px 42px rgba(40, 50, 30, 0.13);
-  --shadow-soft: 0 10px 24px rgba(40, 50, 30, 0.08);
+  --shadow: 0 18px 42px rgba(74, 56, 38, 0.12);
+  --shadow-soft: 0 10px 24px rgba(74, 56, 38, 0.08);
 }
 
 body {
@@ -38,7 +38,7 @@ body {
   background:
     radial-gradient(
       circle at top left,
-      rgba(100, 150, 80, 0.28),
+      rgba(214, 192, 160, 0.35),
       transparent 30%
     ),
     radial-gradient(
@@ -46,7 +46,7 @@ body {
       rgba(171, 141, 102, 0.18),
       transparent 35%
     ),
-    linear-gradient(180deg, #eef3e6 0%, #e8edda 50%, #ede6d8 100%);
+    linear-gradient(180deg, #f5eee4 0%, #efe6d8 100%);
   min-height: 100vh;
   padding: 28px;
   color: var(--text-dark);
@@ -72,8 +72,8 @@ body {
 /* Header */
 .header {
   background:
-    linear-gradient(135deg, rgba(94, 71, 50, 0.97), rgba(78, 122, 78, 0.88)),
-    linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.06));
+    linear-gradient(135deg, rgba(124, 98, 71, 0.97), rgba(94, 71, 50, 0.94)),
+    linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08));
   color: #fff9f1;
   padding: 34px 34px 24px;
   text-align: left;
@@ -363,8 +363,8 @@ body {
 }
 
 .overview-card-highlight {
-  background: linear-gradient(135deg, #fff9f1, #dcefd4);
-  border-color: rgba(78, 122, 78, 0.22);
+  background: linear-gradient(135deg, #fff7ea, #f5e5ca);
+  border-color: rgba(182, 136, 47, 0.24);
 }
 
 .overview-label {
@@ -901,18 +901,18 @@ body {
 .btn-primary {
   background: var(--primary-color);
   color: #fffaf4;
-  box-shadow: 0 10px 18px rgba(49, 92, 49, 0.2);
+  box-shadow: 0 10px 18px rgba(94, 71, 50, 0.16);
 }
 
 .btn-primary:hover {
   background: var(--primary-strong);
   transform: translateY(-1px);
-  box-shadow: 0 14px 20px rgba(49, 92, 49, 0.26);
+  box-shadow: 0 14px 20px rgba(94, 71, 50, 0.2);
 }
 
 .btn-secondary {
   background: #e7d8c3;
-  color: #2f271f;
+  color: var(--primary-strong);
   border-color: rgba(124, 98, 71, 0.16);
 }
 
@@ -1505,7 +1505,7 @@ body {
 
 .trip-mode-badge-local {
   background: #eadfce;
-  color: #5e4732;
+  color: var(--primary-strong);
 }
 
 .trip-mode-badge-edit {
