@@ -32,7 +32,20 @@
         <div class="header-meta-row">
           <p class="header-caption">แตะชื่อทริปเพื่อแก้ไขก่อนแชร์ลิงก์</p>
           <nav class="header-shortcuts" aria-label="ทางลัด">
-            <a class="shortcut-chip" href="#addExpenseHeading">เพิ่มรายการ</a>
+            <button
+              id="shortcutAddPersonBtn"
+              type="button"
+              class="shortcut-chip shortcut-chip-button"
+            >
+              เพิ่มคน
+            </button>
+            <button
+              id="shortcutAddExpenseBtn"
+              type="button"
+              class="shortcut-chip shortcut-chip-button"
+            >
+              เพิ่มรายการ
+            </button>
             <a class="shortcut-chip" href="#summaryHeading">ดูสรุป</a>
             <div class="shortcut-menu">
               <button
@@ -165,177 +178,28 @@
           </div>
         </section>
 
-        <!-- Add Expense Section -->
-        <section
-          id="addExpenseSection"
-          class="section add-expense-section"
-          aria-labelledby="addExpenseHeading"
-        >
-          <h2 id="addExpenseHeading">เพิ่มรายการใหม่</h2>
-          <p id="addExpenseDescription" class="section-description">
-            กรอกชื่อรายการ จำนวนเงิน และเลือกคนที่ต้องหาร
-            ระบบจะคำนวณสรุปให้ทันที
-          </p>
-          <form id="expenseForm" class="form" autocomplete="off">
-            <div class="expense-form-block expense-form-block-primary">
-              <div class="expense-form-block-header">
-                <p class="expense-form-step">1. ข้อมูลรายการ</p>
-                <p class="expense-form-block-hint">
-                  เริ่มจากตั้งชื่อบิลนี้ก่อน
-                </p>
-              </div>
-              <div class="form-group">
-                <label for="expenseName">ชื่อรายการ</label>
-                <input
-                  type="text"
-                  id="expenseName"
-                  placeholder="เช่น อาหาร, ที่พัก..."
-                  required
-                />
-              </div>
-
-              <div class="form-group expense-form-optional-group">
-                <label id="subExpensesLabel">รายการย่อย</label>
-                <p id="subExpensesHint" class="form-hint">
-                  ไม่บังคับเพิ่ม หากไม่มีรายการย่อยสามารถกรอกยอดรวมรายการเองได้
-                </p>
-                <button
-                  type="button"
-                  id="toggleSubExpensesBtn"
-                  class="btn btn-small btn-secondary add-sub-expense-btn accordion-toggle"
-                  aria-expanded="false"
-                  aria-controls="subExpensesPanel"
-                  aria-describedby="subExpensesHint"
-                >
-                  <span class="accordion-toggle-content">
-                    <span class="accordion-toggle-text">เพิ่มรายการย่อย</span>
-                    <span class="accordion-toggle-summary"
-                      >ยังไม่มีรายการย่อย</span
-                    >
-                  </span>
-                  <span class="accordion-toggle-icon" aria-hidden="true"
-                    >▾</span
-                  >
-                </button>
-                <div
-                  id="subExpensesPanel"
-                  class="sub-expenses-panel is-hidden"
-                  aria-hidden="true"
-                  role="region"
-                  aria-labelledby="subExpensesLabel toggleSubExpensesBtn"
-                  aria-describedby="subExpensesHint"
-                >
-                  <div id="subExpenses" class="sub-expenses-list"></div>
-                  <div class="sub-expense-actions">
-                    <button
-                      type="button"
-                      id="addSubExpenseBtn"
-                      class="btn btn-small btn-secondary"
-                    >
-                      + เพิ่มรายการย่อยอีกบรรทัด
-                    </button>
-                    <button
-                      type="button"
-                      id="clearSubExpensesBtn"
-                      class="btn btn-small btn-clear-sub-expenses"
-                    >
-                      ล้างรายการย่อยทั้งหมด
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="expense-form-block">
-              <div class="expense-form-block-header">
-                <p class="expense-form-step">2. ใครจ่ายและยอดรวม</p>
-                <p class="expense-form-block-hint">
-                  ระบุยอดรวมก่อน แล้วเลือกคนที่ออกเงิน
-                </p>
-              </div>
-              <div class="form-row form-row-split">
-                <div class="form-group expense-total-group">
-                  <label for="expenseTotal">ยอดรวมรายการ</label>
-                  <input
-                    type="number"
-                    id="expenseTotal"
-                    placeholder="0.00"
-                    min="0"
-                    step="0.01"
-                    required
-                  />
-                </div>
-
-                <div class="form-group">
-                  <label for="paidBy">ผู้จ่าย</label>
-                  <select id="paidBy" required>
-                    <option value="">-- เลือกผู้จ่าย --</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            <div class="expense-form-block">
-              <div class="expense-form-block-header">
-                <p class="expense-form-step">3. หารกับใคร</p>
-                <p class="expense-form-block-hint">
-                  เลือกเฉพาะคนที่ต้องร่วมจ่ายบิลนี้
-                </p>
-              </div>
-              <div class="form-group">
-                <label id="splitPersonsLabel">แบ่งให้ (เลือกได้หลายคน)</label>
-                <div class="split-buttons">
-                  <button
-                    type="button"
-                    id="selectAllBtn"
-                    class="btn btn-small btn-secondary"
-                  >
-                    เลือกทั้งหมด
-                  </button>
-                  <button
-                    type="button"
-                    id="deselectAllBtn"
-                    class="btn btn-small btn-secondary"
-                  >
-                    ยกเลิกทั้งหมด
-                  </button>
-                </div>
-                <div
-                  id="splitPersons"
-                  class="checkbox-group"
-                  role="group"
-                  aria-labelledby="splitPersonsLabel"
-                >
-                  <!-- Will be populated by JavaScript -->
-                </div>
-              </div>
-            </div>
-
-            <button type="submit" class="btn btn-primary">เพิ่มรายการ</button>
-          </form>
-        </section>
-
         <!-- Add Person Section -->
         <section
           id="addPersonSection"
           class="section add-person-section"
           aria-labelledby="addPersonHeading"
         >
-          <h2 id="addPersonHeading">เพิ่มคนในกลุ่ม</h2>
-          <p id="addPersonDescription" class="section-description">
-            เพิ่มสมาชิกก่อนเริ่มลงบิล เพื่อให้เลือกคนจ่ายและคนที่ต้องหารได้สะดวก
-          </p>
-          <form id="personForm" class="form-inline">
-            <div class="form-group">
-              <input
-                type="text"
-                id="personName"
-                placeholder="ชื่อบุคคล"
-                required
-              />
+          <div class="section-heading-row">
+            <div class="section-heading-copy">
+              <h2 id="addPersonHeading">คนในกลุ่ม</h2>
+              <p id="addPersonDescription" class="section-description">
+                เพิ่มสมาชิกก่อนเริ่มลงบิล
+                เพื่อให้เลือกคนจ่ายและคนที่ต้องหารได้สะดวก
+              </p>
             </div>
-            <button type="submit" class="btn btn-secondary">เพิ่มคน</button>
-          </form>
+            <button
+              id="openPersonModalBtn"
+              type="button"
+              class="btn btn-secondary"
+            >
+              + เพิ่มคน
+            </button>
+          </div>
           <div id="personsList" class="persons-list" aria-live="polite">
             <!-- Will be populated by JavaScript -->
           </div>
@@ -353,15 +217,27 @@
                 ดูรายการล่าสุดทั้งหมด และลบรายการที่ไม่ต้องการได้จากตรงนี้
               </p>
             </div>
-            <div class="section-meta-pills" aria-label="สถานะรายการค่าใช้จ่าย">
-              <span id="expensesCountMeta" class="section-meta-pill"
-                >0 รายการ</span
+            <div class="section-heading-side">
+              <div
+                class="section-meta-pills"
+                aria-label="สถานะรายการค่าใช้จ่าย"
               >
-              <span
-                id="expensesTotalMeta"
-                class="section-meta-pill section-meta-pill-highlight"
-                >0.00 บาท</span
+                <span id="expensesCountMeta" class="section-meta-pill"
+                  >0 รายการ</span
+                >
+                <span
+                  id="expensesTotalMeta"
+                  class="section-meta-pill section-meta-pill-highlight"
+                  >0.00 บาท</span
+                >
+              </div>
+              <button
+                id="openExpenseModalBtn"
+                type="button"
+                class="btn btn-primary"
               >
+                + เพิ่มรายการ
+              </button>
             </div>
           </div>
           <div id="expensesList" class="expenses-list" aria-live="polite">
@@ -530,6 +406,205 @@
         </section>
       </main>
     </div>
+
+    <!-- Add Person Modal -->
+    <dialog
+      id="personModal"
+      class="app-modal"
+      aria-labelledby="personModalTitle"
+    >
+      <div class="app-modal-inner">
+        <div class="app-modal-header">
+          <h2 id="personModalTitle" class="app-modal-title">เพิ่มคนในกลุ่ม</h2>
+          <button
+            type="button"
+            id="personModalCloseBtn"
+            class="app-modal-close"
+            aria-label="ปิด"
+          >
+            ✕
+          </button>
+        </div>
+        <div class="app-modal-body">
+          <form id="personForm" class="app-modal-form" autocomplete="off">
+            <div class="form-group">
+              <label for="personName">ชื่อสมาชิก</label>
+              <input
+                type="text"
+                id="personName"
+                placeholder="ชื่อบุคคล"
+                required
+              />
+            </div>
+            <button type="submit" class="btn btn-primary">เพิ่ม</button>
+          </form>
+        </div>
+      </div>
+    </dialog>
+
+    <!-- Add Expense Modal -->
+    <dialog
+      id="expenseModal"
+      class="app-modal app-modal-lg"
+      aria-labelledby="expenseModalTitle"
+    >
+      <div class="app-modal-inner">
+        <div class="app-modal-header">
+          <h2 id="expenseModalTitle" class="app-modal-title">
+            เพิ่มรายการใหม่
+          </h2>
+          <button
+            type="button"
+            id="expenseModalCloseBtn"
+            class="app-modal-close"
+            aria-label="ปิด"
+          >
+            ✕
+          </button>
+        </div>
+        <div id="addExpenseSection" class="app-modal-body">
+          <p id="addExpenseDescription" class="section-description">
+            กรอกชื่อรายการ จำนวนเงิน และเลือกคนที่ต้องหาร
+            ระบบจะคำนวณสรุปให้ทันที
+          </p>
+          <form id="expenseForm" class="form" autocomplete="off">
+            <div class="expense-form-block expense-form-block-primary">
+              <div class="expense-form-block-header">
+                <p class="expense-form-step">1. ข้อมูลรายการ</p>
+                <p class="expense-form-block-hint">
+                  เริ่มจากตั้งชื่อบิลนี้ก่อน
+                </p>
+              </div>
+              <div class="form-group">
+                <label for="expenseName">ชื่อรายการ</label>
+                <input
+                  type="text"
+                  id="expenseName"
+                  placeholder="เช่น อาหาร, ที่พัก..."
+                  required
+                />
+              </div>
+              <div class="form-group expense-form-optional-group">
+                <label id="subExpensesLabel">รายการย่อย</label>
+                <p id="subExpensesHint" class="form-hint">
+                  ไม่บังคับเพิ่ม หากไม่มีรายการย่อยสามารถกรอกยอดรวมรายการเองได้
+                </p>
+                <button
+                  type="button"
+                  id="toggleSubExpensesBtn"
+                  class="btn btn-small btn-secondary add-sub-expense-btn accordion-toggle"
+                  aria-expanded="false"
+                  aria-controls="subExpensesPanel"
+                  aria-describedby="subExpensesHint"
+                >
+                  <span class="accordion-toggle-content">
+                    <span class="accordion-toggle-text">เพิ่มรายการย่อย</span>
+                    <span class="accordion-toggle-summary"
+                      >ยังไม่มีรายการย่อย</span
+                    >
+                  </span>
+                  <span class="accordion-toggle-icon" aria-hidden="true"
+                    >▾</span
+                  >
+                </button>
+                <div
+                  id="subExpensesPanel"
+                  class="sub-expenses-panel is-hidden"
+                  aria-hidden="true"
+                  role="region"
+                  aria-labelledby="subExpensesLabel toggleSubExpensesBtn"
+                  aria-describedby="subExpensesHint"
+                >
+                  <div id="subExpenses" class="sub-expenses-list"></div>
+                  <div class="sub-expense-actions">
+                    <button
+                      type="button"
+                      id="addSubExpenseBtn"
+                      class="btn btn-small btn-secondary"
+                    >
+                      + เพิ่มรายการย่อยอีกบรรทัด
+                    </button>
+                    <button
+                      type="button"
+                      id="clearSubExpensesBtn"
+                      class="btn btn-small btn-clear-sub-expenses"
+                    >
+                      ล้างรายการย่อยทั้งหมด
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="expense-form-block">
+              <div class="expense-form-block-header">
+                <p class="expense-form-step">2. ใครจ่ายและยอดรวม</p>
+                <p class="expense-form-block-hint">
+                  ระบุยอดรวมก่อน แล้วเลือกคนที่ออกเงิน
+                </p>
+              </div>
+              <div class="form-row form-row-split">
+                <div class="form-group expense-total-group">
+                  <label for="expenseTotal">ยอดรวมรายการ</label>
+                  <input
+                    type="number"
+                    id="expenseTotal"
+                    placeholder="0.00"
+                    min="0"
+                    step="0.01"
+                    required
+                  />
+                </div>
+                <div class="form-group">
+                  <label for="paidBy">ผู้จ่าย</label>
+                  <select id="paidBy" required>
+                    <option value="">-- เลือกผู้จ่าย --</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="expense-form-block">
+              <div class="expense-form-block-header">
+                <p class="expense-form-step">3. หารกับใคร</p>
+                <p class="expense-form-block-hint">
+                  เลือกเฉพาะคนที่ต้องร่วมจ่ายบิลนี้
+                </p>
+              </div>
+              <div class="form-group">
+                <label id="splitPersonsLabel">แบ่งให้ (เลือกได้หลายคน)</label>
+                <div class="split-buttons">
+                  <button
+                    type="button"
+                    id="selectAllBtn"
+                    class="btn btn-small btn-secondary"
+                  >
+                    เลือกทั้งหมด
+                  </button>
+                  <button
+                    type="button"
+                    id="deselectAllBtn"
+                    class="btn btn-small btn-secondary"
+                  >
+                    ยกเลิกทั้งหมด
+                  </button>
+                </div>
+                <div
+                  id="splitPersons"
+                  class="checkbox-group"
+                  role="group"
+                  aria-labelledby="splitPersonsLabel"
+                >
+                  <!-- Will be populated by JavaScript -->
+                </div>
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary">เพิ่มรายการ</button>
+          </form>
+        </div>
+      </div>
+    </dialog>
 
     <script src="trip-logic.js"></script>
     <script src="trip-ui.js"></script>

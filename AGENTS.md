@@ -61,6 +61,7 @@
 - Share links from `create-trip` depend on `APP_BASE_URL` in the deployed function environment. If it is missing, returned URLs fall back to the function origin.
 - GitHub Pages deploys only the files explicitly copied in [.github/workflows/deploy-pages.yml](.github/workflows/deploy-pages.yml). If you add a new top-level frontend script or asset, update that workflow or production will 404 even if local testing passes.
 - Supabase functions require environment variables for admin access. Check [supabase/functions/\_shared/supabase.ts](supabase/functions/_shared/supabase.ts) before changing deployment or local function behavior.
+- A root [.gitignore](.gitignore) is in place covering `temp_build/` and `.DS_Store`. Use `temp_build/` as the conventional scratch directory for temporary copies or build tests; it will not appear in `git status`.
 
 ## Validation
 
@@ -87,5 +88,6 @@
 - Use [.github/skills/deploy-check/SKILL.md](.github/skills/deploy-check/SKILL.md) when deploying or validating deploy-impacting frontend/share changes so Pages artifact checks and `smoke_test.sh` are both included.
 - Use [.github/skills/share-flow-debug/SKILL.md](.github/skills/share-flow-debug/SKILL.md) when debugging share links, mode transitions, link origins, autosave, or sync behavior so deploy failures are separated from real share-state regressions.
 - Use [.github/prompts/deploy-check.prompt.md](.github/prompts/deploy-check.prompt.md) as a prompt wrapper when you want the full deploy-check flow invoked in one step.
+- Use [.github/skills/local-dev-setup/SKILL.md](.github/skills/local-dev-setup/SKILL.md) when changing Edge Functions or migrations and needing to verify backend behavior locally before pushing (note: `smoke_test.sh` only hits the hosted functions).
 - Use [.github/skills/grill-me/SKILL.md](.github/skills/grill-me/SKILL.md) when the user wants a design or implementation plan stress-tested.
 - Use [.github/skills/to-prd/SKILL.md](.github/skills/to-prd/SKILL.md) when the user wants the current conversation turned into a PRD or GitHub issue.

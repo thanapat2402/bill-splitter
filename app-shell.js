@@ -34,17 +34,32 @@
     } = actions;
 
     function bindEvents() {
-      dom.focusAddPersonBtn.addEventListener(
-        "click",
-        handleFocusAddPersonClick,
-      );
-      dom.personForm.addEventListener("submit", addPerson);
-      dom.expenseForm.addEventListener("submit", addExpense);
+      dom.focusAddPersonBtn.addEventListener("click", openPersonModal);
+      dom.personForm.addEventListener("submit", (e) => {
+        addPerson(e);
+        if (!dom.personNameInput.value.trim()) {
+          closePersonModal();
+        }
+      });
+      dom.expenseForm.addEventListener("submit", (e) => {
+        addExpense(e);
+        if (!dom.expenseNameInput.value.trim()) {
+          closeExpenseModal();
+        }
+      });
       dom.tripTitleInput.addEventListener("input", handleTripTitleInput);
       dom.tripTitleInput.addEventListener("blur", normalizeTripTitleInput);
       dom.shortcutLinks.forEach((link) => {
         link.addEventListener("click", handleShortcutClick);
       });
+      dom.shortcutAddPersonBtn.addEventListener("click", openPersonModal);
+      dom.shortcutAddExpenseBtn.addEventListener("click", openExpenseModal);
+      dom.openPersonModalBtn.addEventListener("click", openPersonModal);
+      dom.openExpenseModalBtn.addEventListener("click", openExpenseModal);
+      dom.personModalCloseBtn.addEventListener("click", closePersonModal);
+      dom.expenseModalCloseBtn.addEventListener("click", closeExpenseModal);
+      dom.personModal.addEventListener("click", handleModalBackdropClick);
+      dom.expenseModal.addEventListener("click", handleModalBackdropClick);
       dom.headerShareMenuBtn.addEventListener("click", toggleHeaderShareMenu);
       dom.headerShareEditBtn.addEventListener("click", () => {
         void handleShareLinkAction("edit", { closeMenu: true });
@@ -118,34 +133,41 @@
     }
 
     function handleDocumentKeydown(event) {
-      if (event.key !== "Escape" || !appState.isHeaderShareMenuOpen) {
+      if (event.key === "Escape") {
+        if (appState.isHeaderShareMenuOpen) {
+          setHeaderShareMenuOpen(false);
+          dom.headerShareMenuBtn.focus();
+        }
         return;
       }
-
-      setHeaderShareMenuOpen(false);
-      dom.headerShareMenuBtn.focus();
     }
 
-    function handleFocusAddPersonClick() {
-      const addPersonHeading = document.getElementById("addPersonHeading");
+    function openPersonModal() {
+      dom.personModal.showModal();
+      window.setTimeout(() => dom.personNameInput.focus(), 50);
+    }
 
-      if (!addPersonHeading) {
-        return;
+    function closePersonModal() {
+      dom.personModal.close();
+    }
+
+    function openExpenseModal() {
+      dom.expenseModal.showModal();
+      window.setTimeout(() => dom.expenseNameInput.focus(), 50);
+    }
+
+    function closeExpenseModal() {
+      dom.expenseModal.close();
+      resetExpenseForm();
+    }
+
+    function handleModalBackdropClick(event) {
+      if (event.target === event.currentTarget) {
+        event.currentTarget.close();
+        if (event.currentTarget === dom.expenseModal) {
+          resetExpenseForm();
+        }
       }
-
-      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-        addPersonHeading.scrollIntoView();
-        dom.personNameInput.focus();
-        return;
-      }
-
-      smoothScrollToElement(
-        addPersonHeading,
-        SHORTCUT_SCROLL_DURATION_MS / 1.8,
-      );
-      window.setTimeout(() => {
-        dom.personNameInput.focus();
-      }, 220);
     }
 
     function handleSummaryDetailToggle(event) {
