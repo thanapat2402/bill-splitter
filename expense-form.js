@@ -123,7 +123,9 @@
         return null;
       }
 
-      return data.expenses.find((expense) => expense.id === editingExpenseId) ?? null;
+      return (
+        data.expenses.find((expense) => expense.id === editingExpenseId) ?? null
+      );
     }
 
     function getCheckedSplitPersons() {
