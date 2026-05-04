@@ -407,6 +407,54 @@
       </main>
     </div>
 
+    <nav class="mobile-quick-actions" aria-label="ทางลัดบนมือถือ">
+      <div
+        id="mobileQuickActionsMenu"
+        class="mobile-quick-actions-menu"
+        aria-hidden="true"
+      >
+        <a
+          id="mobileShareLink"
+          class="mobile-quick-action"
+          href="#shareHeading"
+        >
+          แชร์
+        </a>
+        <a
+          id="mobileSummaryLink"
+          class="mobile-quick-action"
+          href="#summaryHeading"
+        >
+          ดูสรุป
+        </a>
+        <button
+          id="mobileAddPersonBtn"
+          type="button"
+          class="mobile-quick-action"
+        >
+          เพิ่มคน
+        </button>
+        <button
+          id="mobileAddExpenseBtn"
+          type="button"
+          class="mobile-quick-action"
+        >
+          เพิ่มบิล
+        </button>
+      </div>
+      <button
+        id="mobileQuickActionsToggleBtn"
+        type="button"
+        class="mobile-fab-toggle"
+        aria-label="เปิดเมนูทางลัด"
+        aria-expanded="false"
+        aria-controls="mobileQuickActionsMenu"
+      >
+        <span class="mobile-fab-toggle-icon" aria-hidden="true">+</span>
+        <span class="sr-only">เปิดเมนูทางลัด</span>
+      </button>
+    </nav>
+
     <!-- Add Person Modal -->
     <dialog
       id="personModal"

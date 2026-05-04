@@ -241,6 +241,62 @@ body {
   gap: 8px;
 }
 
+.mobile-quick-actions {
+  display: none;
+}
+
+.mobile-quick-actions-menu {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.mobile-quick-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(124, 98, 71, 0.16);
+  background: rgba(255, 252, 246, 0.94);
+  color: var(--text-dark);
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 0.92rem;
+  box-shadow: 0 14px 30px rgba(45, 32, 21, 0.16);
+}
+
+.mobile-fab-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(145deg, #bc8452, var(--primary-color));
+  color: #fff9f1;
+  box-shadow: 0 20px 42px rgba(45, 32, 21, 0.24);
+  cursor: pointer;
+  transition:
+    transform 0.22s ease,
+    box-shadow 0.22s ease,
+    background-color 0.22s ease;
+}
+
+.mobile-fab-toggle:hover {
+  transform: translateY(-1px) scale(1.02);
+  box-shadow: 0 24px 48px rgba(45, 32, 21, 0.28);
+}
+
+.mobile-fab-toggle-icon {
+  font-size: 2rem;
+  line-height: 1;
+  transition: transform 0.24s ease;
+}
+
 .shortcut-menu {
   position: relative;
 }
@@ -1750,10 +1806,9 @@ select:disabled {
     padding: 26px 16px 18px;
   }
 
+  /* Header shortcuts hidden on mobile — FAB covers เพิ่มคน/เพิ่มบิล/ดูสรุป/แชร์ */
   .header-meta-row {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 10px;
+    display: none;
   }
 
   .overview-strip {
@@ -1764,22 +1819,6 @@ select:disabled {
 
   .header-title-input {
     font-size: 1.85rem;
-  }
-
-  .header-shortcuts {
-    width: 100%;
-  }
-
-  .shortcut-chip {
-    flex: 1 1 auto;
-  }
-
-  .shortcut-menu {
-    flex: 1 1 100%;
-  }
-
-  .shortcut-chip-button {
-    width: 100%;
   }
 
   .shortcut-menu-panel {
@@ -1793,8 +1832,49 @@ select:disabled {
   }
 
   .main-content {
-    padding: 20px 16px;
+    padding: 20px 16px 96px;
     gap: 16px;
+  }
+
+  .mobile-quick-actions {
+    position: fixed;
+    right: max(16px, env(safe-area-inset-right));
+    bottom: max(16px, env(safe-area-inset-bottom));
+    z-index: 85;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 12px;
+  }
+
+  .mobile-quick-actions-menu {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(12px) scale(0.96);
+    transform-origin: bottom right;
+    transition:
+      opacity 0.22s ease,
+      transform 0.22s ease;
+  }
+
+  .mobile-quick-actions.is-open .mobile-quick-actions-menu {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0) scale(1);
+  }
+
+  .mobile-quick-actions.is-open .mobile-fab-toggle-icon {
+    transform: rotate(45deg);
+  }
+
+  .mobile-quick-action {
+    min-height: 46px;
+    min-width: 136px;
+    justify-content: flex-start;
+    padding: 0 18px;
+    font-size: 0.88rem;
+    background: rgba(255, 252, 246, 0.96);
+    backdrop-filter: blur(12px);
   }
 
   .first-step-list {
@@ -2109,17 +2189,30 @@ select:disabled {
   }
 
   .overview-strip {
-    grid-template-columns: 1fr;
-    gap: 10px;
-    padding: 12px 14px 0;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    padding: 10px 12px 0;
+  }
+
+  .overview-card {
+    padding: 10px 10px 8px;
+    gap: 2px;
+  }
+
+  .overview-value {
+    font-size: 1.05rem;
+  }
+
+  .overview-meta {
+    font-size: 0.76rem;
   }
 
   .header {
-    padding: 22px 14px 16px;
+    padding: 18px 14px 14px;
   }
 
   .header-meta-row {
-    gap: 8px;
+    display: none;
   }
 
   .form-inline {
@@ -2133,7 +2226,17 @@ select:disabled {
   }
 
   .main-content {
-    padding: 14px;
+    padding: 14px 14px 96px;
+  }
+
+  .mobile-fab-toggle {
+    width: 60px;
+    height: 60px;
+  }
+
+  .mobile-quick-actions-menu .mobile-quick-action {
+    min-width: 128px;
+    padding: 0 16px;
   }
 
   .section {
@@ -2167,8 +2270,13 @@ select:disabled {
   }
 
   .section h2 {
-    font-size: 1.1rem;
-    margin-bottom: 15px;
+    font-size: 1.05rem;
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+  }
+
+  .section-description {
+    margin: -4px 0 12px;
   }
 
   .section > h2[id] {
@@ -2219,6 +2327,10 @@ select:disabled {
 
   .persons-list {
     grid-template-columns: 1fr;
+  }
+
+  .person-item {
+    padding: 10px 12px;
   }
 
   .btn {

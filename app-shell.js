@@ -34,6 +34,7 @@
       resetExpenseForm,
       assertEditableOrAlert,
     } = actions;
+    let isMobileQuickActionsOpen = false;
 
     function bindEvents() {
       dom.focusAddPersonBtn.addEventListener("click", openPersonModal);
@@ -56,6 +57,14 @@
       });
       dom.shortcutAddPersonBtn.addEventListener("click", openPersonModal);
       dom.shortcutAddExpenseBtn.addEventListener("click", openExpenseModal);
+      dom.mobileAddPersonBtn.addEventListener("click", openPersonModal);
+      dom.mobileAddExpenseBtn.addEventListener("click", openExpenseModal);
+      dom.mobileShareLink.addEventListener("click", handleShortcutClick);
+      dom.mobileSummaryLink.addEventListener("click", handleShortcutClick);
+      dom.mobileQuickActionsToggleBtn.addEventListener(
+        "click",
+        toggleMobileQuickActionsMenu,
+      );
       dom.openPersonModalBtn.addEventListener("click", openPersonModal);
       dom.openExpenseModalBtn.addEventListener("click", openExpenseModal);
       dom.personModalCloseBtn.addEventListener("click", closePersonModal);
@@ -118,22 +127,61 @@
       setHeaderShareMenuOpen(!appState.isHeaderShareMenuOpen);
     }
 
+    function toggleMobileQuickActionsMenu() {
+      setMobileQuickActionsOpen(!isMobileQuickActionsOpen);
+    }
+
     function setHeaderShareMenuOpen(isOpen) {
       appState.isHeaderShareMenuOpen = isOpen;
       dom.headerShareMenuBtn.setAttribute("aria-expanded", String(isOpen));
       dom.headerShareMenu.classList.toggle("is-hidden", !isOpen);
     }
 
-    function handleDocumentClick(event) {
+    function setMobileQuickActionsOpen(isOpen) {
+      isMobileQuickActionsOpen = Boolean(isOpen);
+
       if (
-        !appState.isHeaderShareMenuOpen ||
-        dom.headerShareMenu.contains(event.target) ||
-        dom.headerShareMenuBtn.contains(event.target)
+        !dom.mobileQuickActions ||
+        !dom.mobileQuickActionsMenu ||
+        !dom.mobileQuickActionsToggleBtn
       ) {
         return;
       }
 
-      setHeaderShareMenuOpen(false);
+      dom.mobileQuickActions.classList.toggle(
+        "is-open",
+        isMobileQuickActionsOpen,
+      );
+      dom.mobileQuickActionsMenu.setAttribute(
+        "aria-hidden",
+        String(!isMobileQuickActionsOpen),
+      );
+      dom.mobileQuickActionsToggleBtn.setAttribute(
+        "aria-expanded",
+        String(isMobileQuickActionsOpen),
+      );
+      dom.mobileQuickActionsToggleBtn.setAttribute(
+        "aria-label",
+        isMobileQuickActionsOpen ? "ปิดเมนูทางลัด" : "เปิดเมนูทางลัด",
+      );
+    }
+
+    function handleDocumentClick(event) {
+      if (
+        appState.isHeaderShareMenuOpen &&
+        !dom.headerShareMenu.contains(event.target) &&
+        !dom.headerShareMenuBtn.contains(event.target)
+      ) {
+        setHeaderShareMenuOpen(false);
+      }
+
+      if (
+        isMobileQuickActionsOpen &&
+        dom.mobileQuickActions &&
+        !dom.mobileQuickActions.contains(event.target)
+      ) {
+        setMobileQuickActionsOpen(false);
+      }
     }
 
     function handleDocumentKeydown(event) {
@@ -142,11 +190,18 @@
           setHeaderShareMenuOpen(false);
           dom.headerShareMenuBtn.focus();
         }
+
+        if (isMobileQuickActionsOpen) {
+          setMobileQuickActionsOpen(false);
+          dom.mobileQuickActionsToggleBtn.focus();
+        }
+
         return;
       }
     }
 
     function openPersonModal() {
+      setMobileQuickActionsOpen(false);
       dom.personModal.showModal();
       window.setTimeout(() => dom.personNameInput.focus(), 50);
     }
@@ -156,6 +211,7 @@
     }
 
     function openExpenseModal() {
+      setMobileQuickActionsOpen(false);
       dom.expenseModal.showModal();
       window.setTimeout(() => dom.expenseNameInput.focus(), 50);
     }
@@ -308,6 +364,8 @@
     }
 
     function handleShortcutClick(event) {
+      setMobileQuickActionsOpen(false);
+
       const targetId = event.currentTarget.getAttribute("href");
 
       if (!targetId || !targetId.startsWith("#")) {
