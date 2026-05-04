@@ -759,9 +759,51 @@ body {
 
 .sub-expense-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 140px auto;
+  grid-template-columns: minmax(0, 1fr) 140px minmax(0, 1.2fr) auto;
   gap: 12px;
+  align-items: start;
+}
+
+.sub-expense-split-group {
+  display: grid;
+  gap: 8px;
+}
+
+.sub-expense-split-label {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.sub-expense-split-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.sub-expense-split-option {
+  display: inline-flex;
   align-items: center;
+  gap: 6px;
+  padding: 7px 10px;
+  border: 1px solid rgba(181, 155, 123, 0.32);
+  border-radius: 999px;
+  background: rgba(255, 252, 246, 0.92);
+  color: var(--text-dark);
+  font-size: 0.84rem;
+  cursor: pointer;
+}
+
+.sub-expense-split-option input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: var(--primary-color);
+}
+
+.sub-expense-split-option input[type="checkbox"]:focus-visible {
+  outline: 2px solid rgba(124, 98, 71, 0.28);
+  outline-offset: 2px;
 }
 
 .add-sub-expense-btn {
@@ -1001,6 +1043,7 @@ body {
   align-items: center;
   padding: 18px;
   border: 1px solid rgba(124, 98, 71, 0.14);
+  cursor: pointer;
 }
 
 .expenses-section .empty-message {
@@ -1064,11 +1107,25 @@ body {
 
 .sub-expense-item {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 10px;
   font-size: 0.88rem;
   color: var(--text-dark);
+}
+
+.sub-expense-item-copy {
+  display: grid;
+  gap: 2px;
+}
+
+.sub-expense-item-name {
+  font-weight: 600;
+}
+
+.sub-expense-item-meta {
+  font-size: 0.8rem;
+  color: var(--text-light);
 }
 
 .expense-amount {

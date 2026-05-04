@@ -61,9 +61,46 @@
           return false;
         }
 
-        expense.splitAmong = expense.splitAmong.filter(
+        const nextSplitAmong = expense.splitAmong.filter(
           (person) => person !== name,
         );
+
+        if (
+          Array.isArray(expense.subExpenses) &&
+          expense.subExpenses.length > 0
+        ) {
+          const nextSubExpenses = expense.subExpenses
+            .map((subExpense) => {
+              const sourceSplitAmong =
+                Array.isArray(subExpense.splitAmong) &&
+                subExpense.splitAmong.length > 0
+                  ? subExpense.splitAmong
+                  : nextSplitAmong;
+
+              return {
+                ...subExpense,
+                splitAmong: sourceSplitAmong.filter(
+                  (person) => person !== name,
+                ),
+              };
+            })
+            .filter((subExpense) => subExpense.splitAmong.length > 0);
+
+          if (nextSubExpenses.length === 0) {
+            return false;
+          }
+
+          expense.subExpenses = nextSubExpenses;
+          expense.splitAmong = [
+            ...new Set(
+              nextSubExpenses.flatMap((subExpense) => subExpense.splitAmong),
+            ),
+          ];
+          expense.amount = roundExpenseAmount(nextSubExpenses);
+          return expense.splitAmong.length > 0 && expense.amount > 0;
+        }
+
+        expense.splitAmong = nextSplitAmong;
         return expense.splitAmong.length > 0;
       });
 
@@ -190,6 +227,15 @@
     function clearTransientForms() {
       dom.personForm.reset();
       resetExpenseForm();
+    }
+
+    function roundExpenseAmount(subExpenses) {
+      return (
+        Math.round(
+          subExpenses.reduce((sum, item) => sum + Number(item.amount || 0), 0) *
+            100,
+        ) / 100
+      );
     }
 
     return {

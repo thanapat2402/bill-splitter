@@ -226,6 +226,7 @@
       data.expenses.forEach((expense) => {
         const item = document.createElement("div");
         item.className = "expense-item";
+        item.dataset.expenseId = String(expense.id);
         item.innerHTML = createExpenseMarkup(expense);
         dom.expensesList.appendChild(item);
       });
@@ -233,7 +234,11 @@
 
     function createExpenseMarkup(expense) {
       const splitCount = expense.splitAmong.length;
-      const amountPerPerson = expense.amount / splitCount;
+      const amountPerPerson = splitCount > 0 ? expense.amount / splitCount : 0;
+      const splitInfo =
+        expense.subExpenses.length > 0
+          ? `แยกตามรายการย่อย • เกี่ยวข้อง ${splitCount} คน`
+          : `หาร ${splitCount} คน • ${formatAmount(amountPerPerson)} บาท/คน`;
 
       return `
             <div class="expense-detail">
@@ -245,25 +250,37 @@
           <span class="expense-meta-pill">💸 ${expense.paidBy} จ่าย</span>
           <span class="expense-meta-pill">📅 ${expense.date}</span>
         </div>
-                <div class="sub-expense-list">${createSubExpenseListMarkup(expense.subExpenses)}</div>
+                <div class="sub-expense-list">${createSubExpenseListMarkup(expense.subExpenses, expense.splitAmong)}</div>
             </div>
             <div class="expense-amount">
         <div class="expense-total-pill">${formatAmount(expense.amount)} บาท</div>
-        <div class="split-info">หาร ${splitCount} คน • ${formatAmount(amountPerPerson)} บาท/คน</div>
+        <div class="split-info">${splitInfo}</div>
             </div>
         `;
     }
 
-    function createSubExpenseListMarkup(subExpenses = []) {
+    function createSubExpenseListMarkup(
+      subExpenses = [],
+      expenseSplitAmong = [],
+    ) {
       return subExpenses
-        .map(
-          (subExpense) => `
+        .map((subExpense) => {
+          const splitAmong =
+            Array.isArray(subExpense.splitAmong) &&
+            subExpense.splitAmong.length > 0
+              ? subExpense.splitAmong
+              : expenseSplitAmong;
+
+          return `
           <div class="sub-expense-item">
-            <span>${subExpense.name}</span>
+            <div class="sub-expense-item-copy">
+              <span class="sub-expense-item-name">${subExpense.name}</span>
+              <span class="sub-expense-item-meta">หารกับ ${splitAmong.join(", ")}</span>
+            </div>
             <span>${formatAmount(subExpense.amount)} บาท</span>
           </div>
-        `,
-        )
+        `;
+        })
         .join("");
     }
 

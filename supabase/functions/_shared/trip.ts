@@ -3,6 +3,7 @@ export const TRIP_SCHEMA_VERSION = 1;
 export type TripSubExpense = {
   name: string;
   amount: number;
+  splitAmong?: string[];
 };
 
 export type TripExpense = {
@@ -107,6 +108,21 @@ export function validateTripSnapshot(
 
         if (!Number.isFinite(subAmount) || subAmount <= 0) {
           throw new Error("INVALID_TRIP_DATA");
+        }
+
+        if (
+          item.splitAmong !== undefined &&
+          (!Array.isArray(item.splitAmong) || item.splitAmong.length === 0)
+        ) {
+          throw new Error("INVALID_TRIP_DATA");
+        }
+
+        if (Array.isArray(item.splitAmong)) {
+          item.splitAmong.forEach((person) => {
+            if (!personSet.has(String(person))) {
+              throw new Error("INVALID_TRIP_DATA");
+            }
+          });
         }
 
         return sum + subAmount;

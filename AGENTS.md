@@ -1,5 +1,20 @@
 # AGENTS.md
 
+## Agent Quick Start
+
+- Start with [README.md](README.md) for the production Pages URL and `APP_BASE_URL` expectation.
+- For browser UI work in [index.html](index.html), [style.css](style.css), or the top-level browser scripts, use [.github/skills/frontend-static/SKILL.md](.github/skills/frontend-static/SKILL.md).
+- For share links, autosave, mode transitions, or sync issues, use [.github/skills/share-flow-debug/SKILL.md](.github/skills/share-flow-debug/SKILL.md) and the repo skill [.agents/skills/supabase/SKILL.md](.agents/skills/supabase/SKILL.md).
+- For Edge Functions or migrations, use [.github/skills/local-dev-setup/SKILL.md](.github/skills/local-dev-setup/SKILL.md) before pushing and keep backend changes inside [supabase/functions](supabase/functions) plus [supabase/migrations](supabase/migrations).
+- For deploy or post-push verification, use [.github/skills/deploy-check/SKILL.md](.github/skills/deploy-check/SKILL.md).
+
+## Fast Validation Entry Points
+
+- Frontend-only changes: open [index.html](index.html) locally via `file:///.../index.html` and test the edited flow plus one adjacent flow.
+- Sharing or persistence changes: run [smoke_test.sh](smoke_test.sh) against the deployed functions unless the task is explicitly local-only.
+- Local backend verification: follow [.github/skills/local-dev-setup/SKILL.md](.github/skills/local-dev-setup/SKILL.md) instead of inventing an ad hoc local flow.
+- New top-level frontend files: update [.github/workflows/deploy-pages.yml](.github/workflows/deploy-pages.yml) or production will 404 even if local testing passes.
+
 ## Project Scope
 
 - This repo is a small bill-splitting app with a static frontend plus Supabase-backed sharing.

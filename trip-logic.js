@@ -10,6 +10,38 @@
     }).format(amount);
   }
 
+  function getSubExpenseSplitAmong(expense, subExpense) {
+    if (
+      Array.isArray(subExpense.splitAmong) &&
+      subExpense.splitAmong.length > 0
+    ) {
+      return subExpense.splitAmong;
+    }
+
+    return expense.splitAmong;
+  }
+
+  function getExpenseSegments(expense) {
+    if (
+      !Array.isArray(expense.subExpenses) ||
+      expense.subExpenses.length === 0
+    ) {
+      return [
+        {
+          name: expense.name,
+          amount: expense.amount,
+          splitAmong: expense.splitAmong,
+        },
+      ];
+    }
+
+    return expense.subExpenses.map((subExpense) => ({
+      name: subExpense.name,
+      amount: subExpense.amount,
+      splitAmong: getSubExpenseSplitAmong(expense, subExpense),
+    }));
+  }
+
   function calculateSummary(data) {
     const summary = Object.fromEntries(
       data.persons.map((person) => [
@@ -25,9 +57,12 @@
     data.expenses.forEach((expense) => {
       summary[expense.paidBy].paid += expense.amount;
 
-      const amountPerPerson = expense.amount / expense.splitAmong.length;
-      expense.splitAmong.forEach((person) => {
-        summary[person].owed += amountPerPerson;
+      getExpenseSegments(expense).forEach((segment) => {
+        const amountPerPerson = segment.amount / segment.splitAmong.length;
+
+        segment.splitAmong.forEach((person) => {
+          summary[person].owed += amountPerPerson;
+        });
       });
     });
 
@@ -49,12 +84,21 @@
           });
         }
 
-        if (expense.splitAmong.includes(person)) {
+        getExpenseSegments(expense).forEach((segment) => {
+          if (!segment.splitAmong.includes(person)) {
+            return;
+          }
+
+          const segmentName =
+            segment.name === expense.name
+              ? expense.name
+              : `${expense.name} - ${segment.name}`;
+
           details.owed.push({
-            name: expense.name,
-            amount: expense.amount / expense.splitAmong.length,
+            name: segmentName,
+            amount: segment.amount / segment.splitAmong.length,
           });
-        }
+        });
 
         return details;
       },
@@ -160,6 +204,7 @@
         subExpenses: (expense.subExpenses || []).map((item) => ({
           name: item.name,
           amount: roundCurrency(item.amount),
+          splitAmong: [...getSubExpenseSplitAmong(expense, item)],
         })),
         paidBy: expense.paidBy,
         splitAmong: [...expense.splitAmong],
@@ -215,7 +260,28 @@
         ? expense.subExpenses
         : [];
       const subExpenseTotal = roundCurrency(
-        subExpenses.reduce((sum, item) => sum + Number(item.amount || 0), 0),
+        subExpenses.reduce((sum, item) => {
+          if (!item || typeof item !== "object") {
+            throw new Error("INVALID_TRIP_DATA");
+          }
+
+          if (
+            item.splitAmong !== undefined &&
+            (!Array.isArray(item.splitAmong) || item.splitAmong.length === 0)
+          ) {
+            throw new Error("INVALID_TRIP_DATA");
+          }
+
+          if (Array.isArray(item.splitAmong)) {
+            item.splitAmong.forEach((person) => {
+              if (!validPersons.has(person)) {
+                throw new Error("INVALID_TRIP_DATA");
+              }
+            });
+          }
+
+          return sum + Number(item.amount || 0);
+        }, 0),
       );
 
       if (
@@ -235,19 +301,31 @@
         .map((person) => String(person).trim())
         .filter(Boolean),
       expenses: rawData.expenses.map((expense) => ({
-        id: Number(expense.id),
-        name: String(expense.name).trim(),
-        amount: roundCurrency(Number(expense.amount)),
-        subExpenses: Array.isArray(expense.subExpenses)
-          ? expense.subExpenses.map((item) => ({
-              name: String(item.name).trim(),
-              amount: roundCurrency(Number(item.amount)),
-            }))
-          : [],
-        paidBy: String(expense.paidBy),
-        splitAmong: expense.splitAmong.map((person) => String(person)),
-        date: String(expense.date),
+        ...normalizeExpense(expense),
       })),
+    };
+  }
+
+  function normalizeExpense(expense) {
+    const splitAmong = expense.splitAmong.map((person) => String(person));
+
+    return {
+      id: Number(expense.id),
+      name: String(expense.name).trim(),
+      amount: roundCurrency(Number(expense.amount)),
+      subExpenses: Array.isArray(expense.subExpenses)
+        ? expense.subExpenses.map((item) => ({
+            name: String(item.name).trim(),
+            amount: roundCurrency(Number(item.amount)),
+            splitAmong:
+              Array.isArray(item.splitAmong) && item.splitAmong.length > 0
+                ? item.splitAmong.map((person) => String(person))
+                : [...splitAmong],
+          }))
+        : [],
+      paidBy: String(expense.paidBy),
+      splitAmong,
+      date: String(expense.date),
     };
   }
 
@@ -256,7 +334,10 @@
     data.persons = [...snapshot.persons];
     data.expenses = snapshot.expenses.map((expense) => ({
       ...expense,
-      subExpenses: expense.subExpenses.map((item) => ({ ...item })),
+      subExpenses: expense.subExpenses.map((item) => ({
+        ...item,
+        splitAmong: Array.isArray(item.splitAmong) ? [...item.splitAmong] : [],
+      })),
       splitAmong: [...expense.splitAmong],
     }));
   }

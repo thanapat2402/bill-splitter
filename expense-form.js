@@ -9,6 +9,10 @@
       updateUI,
       escapeAttribute,
     } = actions;
+    const expenseSubmitButton = dom.expenseForm.querySelector(
+      'button[type="submit"]',
+    );
+    let editingExpenseId = null;
 
     function addExpense(event) {
       event.preventDefault();
@@ -25,7 +29,7 @@
         return;
       }
 
-      data.expenses.push(createExpense(expenseInput));
+      upsertExpense(expenseInput);
       resetExpenseForm();
       markDirty();
       updateUI();
@@ -34,11 +38,14 @@
     function getExpenseInput() {
       const { subExpenses, hasIncompleteRows } = collectSubExpenses();
       const manualAmount = parseFloat(dom.expenseTotalInput.value);
+      const splitAmong = subExpenses.length
+        ? getUniqueSubExpenseSplitPersons(subExpenses)
+        : getCheckedSplitPersons();
 
       return {
         name: dom.expenseNameInput.value.trim(),
         paidBy: dom.paidBySelect.value,
-        splitAmong: getCheckedSplitPersons(),
+        splitAmong,
         subExpenses,
         hasIncompleteRows,
         amount: subExpenses.length
@@ -53,7 +60,7 @@
       }
 
       if (expenseInput.hasIncompleteRows) {
-        return "กรุณากรอกชื่อและจำนวนเงินของรายการย่อยให้ครบ";
+        return "กรุณากรอกชื่อ จำนวนเงิน และเลือกคนที่ต้องหารของรายการย่อยให้ครบ";
       }
 
       if (expenseInput.amount <= 0) {
@@ -73,16 +80,50 @@
       return null;
     }
 
-    function createExpense({ name, amount, subExpenses, paidBy, splitAmong }) {
+    function createExpense({
+      id,
+      name,
+      amount,
+      subExpenses,
+      paidBy,
+      splitAmong,
+      date,
+    }) {
       return {
-        id: Date.now(),
+        id: id ?? Date.now(),
         name,
         amount,
         subExpenses,
         paidBy,
         splitAmong,
-        date: new Date().toLocaleDateString("th-TH"),
+        date: date ?? new Date().toLocaleDateString("th-TH"),
       };
+    }
+
+    function upsertExpense(expenseInput) {
+      const existingExpense = getEditingExpense();
+      const nextExpense = createExpense({
+        ...expenseInput,
+        id: existingExpense?.id,
+        date: existingExpense?.date,
+      });
+
+      if (!existingExpense) {
+        data.expenses.push(nextExpense);
+        return;
+      }
+
+      data.expenses = data.expenses.map((expense) =>
+        expense.id === existingExpense.id ? nextExpense : expense,
+      );
+    }
+
+    function getEditingExpense() {
+      if (editingExpenseId === null) {
+        return null;
+      }
+
+      return data.expenses.find((expense) => expense.id === editingExpenseId) ?? null;
     }
 
     function getCheckedSplitPersons() {
@@ -118,13 +159,54 @@
         .forEach((checkbox) => {
           checkbox.checked = isChecked;
         });
+
+      syncSubExpenseRowsFromMainSelection();
+    }
+
+    function setMainSplitSelection(selectedPersons) {
+      const selectedPersonSet = new Set(selectedPersons);
+
+      dom.splitPersonsDiv
+        .querySelectorAll('input[type="checkbox"]')
+        .forEach((checkbox) => {
+          checkbox.checked = selectedPersonSet.has(checkbox.value);
+        });
+    }
+
+    function setMainSplitControlsDisabled(isDisabled) {
+      dom.selectAllBtn.disabled = isDisabled;
+      dom.deselectAllBtn.disabled = isDisabled;
+
+      dom.splitPersonsDiv
+        .querySelectorAll('input[type="checkbox"]')
+        .forEach((checkbox) => {
+          checkbox.disabled = isDisabled;
+        });
+    }
+
+    function handleSplitPersonsInput(event) {
+      if (event.target.type !== "checkbox") {
+        return;
+      }
+
+      syncSubExpenseRowsFromMainSelection();
     }
 
     function handleSubExpenseInput(event) {
+      const row = event.target.closest(".sub-expense-row");
+
       if (
         event.target.classList.contains("sub-expense-name") ||
-        event.target.classList.contains("sub-expense-amount")
+        event.target.classList.contains("sub-expense-amount") ||
+        event.target.classList.contains("sub-expense-split-checkbox")
       ) {
+        if (
+          row &&
+          event.target.classList.contains("sub-expense-split-checkbox")
+        ) {
+          updateSubExpenseRowSyncState(row);
+        }
+
         updateExpenseTotal();
       }
     }
@@ -193,21 +275,22 @@
       updateSubExpenseSummary();
     }
 
-    function addSubExpenseRow(name = "", amount = "") {
+    function addSubExpenseRow(name = "", amount = "", splitAmong = null) {
       if (!canEdit()) {
         return;
       }
 
-      const row = createSubExpenseRowElement(name, amount);
+      const row = createSubExpenseRowElement(name, amount, splitAmong);
       dom.subExpensesContainer.appendChild(row);
-      row.querySelector(".sub-expense-name").value = name;
-      row.querySelector(".sub-expense-amount").value = amount;
       updateExpenseTotal();
     }
 
-    function createSubExpenseRowElement(name, amount) {
+    function createSubExpenseRowElement(name, amount, splitAmong) {
+      const selectedPersons = getInitialSubExpenseSplitAmong(splitAmong);
+      const shouldSyncWithMain = shouldSyncSubExpenseWithMain(splitAmong);
       const row = document.createElement("div");
       row.className = "sub-expense-row";
+      row.dataset.splitSyncMode = shouldSyncWithMain ? "synced" : "custom";
       row.innerHTML = `
         <input
             type="text"
@@ -228,6 +311,12 @@
             autocomplete="off"
             value="${amount}"
         />
+        <div class="sub-expense-split-group">
+          <span class="sub-expense-split-label">ของใครบ้าง</span>
+          <div class="sub-expense-split-list">
+            ${createSubExpenseSplitOptionsMarkup(selectedPersons)}
+          </div>
+        </div>
         <button
             type="button"
             class="btn btn-remove"
@@ -237,6 +326,26 @@
         </button>
     `;
       return row;
+    }
+
+    function createSubExpenseSplitOptionsMarkup(selectedPersons) {
+      return data.persons
+        .map((person) => {
+          const isChecked = selectedPersons.includes(person) ? "checked" : "";
+
+          return `
+            <label class="sub-expense-split-option">
+              <input
+                type="checkbox"
+                class="sub-expense-split-checkbox"
+                value="${escapeAttribute(person)}"
+                ${isChecked}
+              />
+              <span>${person}</span>
+            </label>
+          `;
+        })
+        .join("");
     }
 
     function removeSubExpenseRow(button) {
@@ -263,6 +372,87 @@
       );
     }
 
+    function getInitialSubExpenseSplitAmong(splitAmong) {
+      if (Array.isArray(splitAmong) && splitAmong.length > 0) {
+        return splitAmong.filter((person) => data.persons.includes(person));
+      }
+
+      return getEffectiveMainSplitPersons();
+    }
+
+    function getEffectiveMainSplitPersons() {
+      const checkedPersons = getCheckedSplitPersons();
+
+      if (checkedPersons.length > 0) {
+        return checkedPersons;
+      }
+
+      return [...data.persons];
+    }
+
+    function shouldSyncSubExpenseWithMain(splitAmong) {
+      if (!Array.isArray(splitAmong) || splitAmong.length === 0) {
+        return true;
+      }
+
+      return areSamePersonSelection(splitAmong, getEffectiveMainSplitPersons());
+    }
+
+    function getSubExpenseRowSelectedPersons(row) {
+      return Array.from(
+        row.querySelectorAll(".sub-expense-split-checkbox:checked"),
+        (checkbox) => checkbox.value,
+      );
+    }
+
+    function setSubExpenseRowSelectedPersons(row, selectedPersons) {
+      const selectedPersonSet = new Set(selectedPersons);
+
+      row
+        .querySelectorAll(".sub-expense-split-checkbox")
+        .forEach((checkbox) => {
+          checkbox.checked = selectedPersonSet.has(checkbox.value);
+        });
+    }
+
+    function areSamePersonSelection(left, right) {
+      if (left.length !== right.length) {
+        return false;
+      }
+
+      return left.every((person, index) => person === right[index]);
+    }
+
+    function updateSubExpenseRowSyncState(row) {
+      const mainSelection = getEffectiveMainSplitPersons();
+      const rowSelection = getSubExpenseRowSelectedPersons(row);
+
+      row.dataset.splitSyncMode = areSamePersonSelection(
+        rowSelection,
+        mainSelection,
+      )
+        ? "synced"
+        : "custom";
+    }
+
+    function syncSubExpenseRowsFromMainSelection() {
+      const mainSelection = getEffectiveMainSplitPersons();
+
+      getSubExpenseRows().forEach((row) => {
+        if (row.dataset.splitSyncMode !== "synced") {
+          return;
+        }
+
+        setSubExpenseRowSelectedPersons(row, mainSelection);
+      });
+
+      updateExpenseTotal();
+    }
+
+    function getUniqueSubExpenseSplitPersons(subExpenses) {
+      return [...new Set(subExpenses.flatMap((item) => item.splitAmong))];
+    }
+
     function collectSubExpenses() {
       const subExpenses = [];
       let hasIncompleteRows = false;
@@ -271,6 +461,7 @@
         const name = row.querySelector(".sub-expense-name").value.trim();
         const rawAmount = row.querySelector(".sub-expense-amount").value.trim();
         const parsedAmount = parseFloat(rawAmount);
+        const splitAmong = getSubExpenseRowSelectedPersons(row);
 
         if (!name && !rawAmount) {
           return;
@@ -280,7 +471,8 @@
           !name ||
           !rawAmount ||
           Number.isNaN(parsedAmount) ||
-          parsedAmount <= 0
+          parsedAmount <= 0 ||
+          splitAmong.length === 0
         ) {
           hasIncompleteRows = true;
           return;
@@ -289,6 +481,7 @@
         subExpenses.push({
           name,
           amount: roundCurrency(parsedAmount),
+          splitAmong,
         });
       });
 
@@ -306,11 +499,17 @@
 
       if (subExpenses.length > 0) {
         const total = calculateSubExpenseTotal(subExpenses);
+        const splitAmong = getUniqueSubExpenseSplitPersons(subExpenses);
+
+        setMainSplitSelection(splitAmong);
+        setMainSplitControlsDisabled(true);
         dom.expenseTotalInput.value = total > 0 ? total.toFixed(2) : "";
         dom.expenseTotalInput.readOnly = true;
         updateSubExpenseSummary(subExpenses, total);
         return;
       }
+
+      setMainSplitControlsDisabled(false);
 
       if (dom.expenseTotalInput.readOnly) {
         dom.expenseTotalInput.value = "";
@@ -337,9 +536,70 @@
       summaryElement.textContent = `${itemLabel} • รวม ${formatAmount(total)} บาท`;
     }
 
+    function startExpenseEdit(expenseId) {
+      if (!assertEditableOrAlert()) {
+        return false;
+      }
+
+      const expense = data.expenses.find((item) => item.id === expenseId);
+
+      if (!expense) {
+        return false;
+      }
+
+      editingExpenseId = expense.id;
+      applyExpenseFormMode(true);
+      fillExpenseForm(expense);
+      return true;
+    }
+
+    function fillExpenseForm(expense) {
+      dom.expenseNameInput.value = expense.name;
+      dom.paidBySelect.value = expense.paidBy;
+      setMainSplitSelection(expense.splitAmong);
+
+      clearSubExpenses();
+
+      if (expense.subExpenses.length > 0) {
+        setSubExpensesPanelVisibility(true);
+        clearSubExpenses();
+        expense.subExpenses.forEach((subExpense) => {
+          addSubExpenseRow(
+            subExpense.name,
+            subExpense.amount,
+            subExpense.splitAmong,
+          );
+        });
+      } else {
+        setSubExpensesPanelVisibility(false);
+        dom.expenseTotalInput.value = expense.amount.toFixed(2);
+      }
+
+      if (expense.subExpenses.length === 0) {
+        setMainSplitControlsDisabled(false);
+      }
+
+      updateExpenseTotal();
+    }
+
+    function applyExpenseFormMode(isEditing) {
+      dom.expenseModalTitle.textContent = isEditing
+        ? "แก้ไขรายการ"
+        : "เพิ่มรายการใหม่";
+      dom.addExpenseDescription.textContent = isEditing
+        ? "แก้ไขชื่อรายการ จำนวนเงิน และคนที่ต้องหารได้จากฟอร์มนี้"
+        : "กรอกชื่อรายการ จำนวนเงิน และเลือกคนที่ต้องหาร ระบบจะคำนวณสรุปให้ทันที";
+      expenseSubmitButton.textContent = isEditing
+        ? "บันทึกการแก้ไข"
+        : "เพิ่มรายการ";
+    }
+
     function resetExpenseForm() {
+      editingExpenseId = null;
+      applyExpenseFormMode(false);
       dom.expenseForm.reset();
       dom.expenseTotalInput.readOnly = false;
+      setMainSplitControlsDisabled(false);
       clearSubExpenses();
       hideSubExpensesPanel();
       updateSubExpenseSummary();
@@ -349,6 +609,8 @@
       addExpense,
       selectAllPersons,
       deselectAllPersons,
+      startExpenseEdit,
+      handleSplitPersonsInput,
       handleSubExpenseInput,
       handleSubExpenseAction,
       toggleSubExpensesPanel,

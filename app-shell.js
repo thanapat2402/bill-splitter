@@ -22,8 +22,10 @@
       resetAll,
       addPerson,
       addExpense,
+      startExpenseEdit,
       selectAllPersons,
       deselectAllPersons,
+      handleSplitPersonsInput,
       toggleSubExpensesPanel,
       addSubExpenseRow,
       clearSubExpensesAndKeepPanel,
@@ -81,6 +83,8 @@
       dom.resetBtn.addEventListener("click", resetAll);
       dom.selectAllBtn.addEventListener("click", selectAllPersons);
       dom.deselectAllBtn.addEventListener("click", deselectAllPersons);
+      dom.splitPersonsDiv.addEventListener("change", handleSplitPersonsInput);
+      dom.expensesList.addEventListener("click", handleExpenseCardClick);
       dom.toggleSubExpensesBtn.addEventListener(
         "click",
         toggleSubExpensesPanel,
@@ -154,6 +158,30 @@
     function openExpenseModal() {
       dom.expenseModal.showModal();
       window.setTimeout(() => dom.expenseNameInput.focus(), 50);
+    }
+
+    function handleExpenseCardClick(event) {
+      if (event.target.closest(".btn-remove")) {
+        return;
+      }
+
+      const expenseCard = event.target.closest(".expense-item");
+
+      if (!expenseCard || !dom.expensesList.contains(expenseCard)) {
+        return;
+      }
+
+      const expenseId = Number(expenseCard.dataset.expenseId);
+
+      if (!Number.isFinite(expenseId)) {
+        return;
+      }
+
+      if (!startExpenseEdit(expenseId)) {
+        return;
+      }
+
+      openExpenseModal();
     }
 
     function closeExpenseModal() {
