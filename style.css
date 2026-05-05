@@ -1240,8 +1240,8 @@ body {
 .summary-card {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  padding: 18px;
+  gap: 10px;
+  padding: 14px 16px;
   text-align: left;
   border: 1px solid rgba(124, 98, 71, 0.14);
   border-radius: calc(var(--radius) - 4px);
@@ -1262,8 +1262,11 @@ body {
 }
 
 .summary-card-header {
-  display: grid;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
 .summary-person-name {
@@ -1338,9 +1341,9 @@ body {
 }
 
 .summary-detail-summary-amount {
-  font-size: clamp(1.2rem, 2.2vw, 1.55rem);
+  font-size: clamp(1rem, 1.8vw, 1.2rem);
   line-height: 1;
-  letter-spacing: -0.035em;
+  letter-spacing: -0.025em;
   color: var(--text-dark);
 }
 
@@ -1441,8 +1444,8 @@ body {
 
 .summary-balance-row {
   display: grid;
-  gap: 6px;
-  margin-top: auto;
+  gap: 2px;
+  margin-top: 0;
 }
 
 .summary-balance-kicker {
@@ -1472,12 +1475,19 @@ body {
 }
 
 .summary-value {
-  font-size: clamp(1.9rem, 4vw, 2.7rem);
+  font-size: clamp(1.4rem, 2.8vw, 1.9rem);
   line-height: 1;
   font-weight: 700;
   color: var(--primary-color);
-  letter-spacing: -0.04em;
+  letter-spacing: -0.03em;
   overflow-wrap: anywhere;
+}
+
+.summary-value-unit {
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  opacity: 0.72;
 }
 
 .summary-value-positive {
@@ -1495,18 +1505,18 @@ body {
 /* Settlement Components */
 .settlement-content {
   display: grid;
-  gap: 14px;
+  gap: 8px;
 }
 
 .settlement-item {
-  padding: 16px 18px;
+  padding: 10px 14px;
   border: 1px solid rgba(180, 138, 87, 0.2);
   border-radius: calc(var(--radius) - 2px);
   background: linear-gradient(180deg, rgba(255, 252, 246, 0.92), #fffaf2);
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
 }
 
 .settlement-order {
@@ -1537,32 +1547,32 @@ body {
 }
 
 .settlement-from {
-  font-weight: 600;
+  font-weight: 700;
   color: var(--danger-color);
-  font-size: clamp(1.55rem, 3vw, 2rem);
-  line-height: 1.05;
+  font-size: 1.05rem;
+  line-height: 1.2;
 }
 
 .settlement-to {
-  font-weight: 600;
+  font-weight: 700;
   color: var(--success-color);
-  font-size: clamp(1.55rem, 3vw, 2rem);
-  line-height: 1.05;
+  font-size: 1.05rem;
+  line-height: 1.2;
 }
 
 .settlement-arrow {
   color: var(--text-light);
   margin: 0;
-  font-size: 1.8rem;
+  font-size: 1rem;
   line-height: 1;
 }
 
 .settlement-amount {
   justify-self: end;
-  font-size: clamp(1.38rem, 3vw, 1.82rem);
+  font-size: 0.98rem;
   font-weight: 700;
   color: var(--warning-color);
-  padding: 12px 18px;
+  padding: 6px 12px;
   background: #f2e4cb;
   border-radius: 999px;
   white-space: nowrap;
@@ -1902,7 +1912,7 @@ select:disabled {
   }
 
   .summary-detail-summary-amount {
-    font-size: clamp(1.25rem, 5.8vw, 1.55rem);
+    font-size: clamp(1rem, 4.5vw, 1.2rem);
   }
 
   .summary-detail-summary-unit {
@@ -2017,16 +2027,16 @@ select:disabled {
 
   .settlement-item {
     grid-template-columns: auto minmax(0, 1fr) auto;
-    gap: 10px;
+    gap: 8px;
   }
 
   .settlement-text {
-    gap: 6px 8px;
+    gap: 4px 6px;
   }
 
   .settlement-from,
   .settlement-to {
-    font-size: clamp(1.25rem, 5vw, 1.7rem);
+    font-size: 1rem;
   }
 
   .settlement-arrow {
@@ -2351,12 +2361,12 @@ select:disabled {
   }
 
   .summary-card {
-    padding: 14px;
-    gap: 14px;
+    padding: 12px 14px;
+    gap: 8px;
   }
 
   .summary-value {
-    font-size: clamp(1.7rem, 7vw, 2.15rem);
+    font-size: clamp(1.25rem, 5.5vw, 1.55rem);
   }
 
   .summary-stat {
@@ -2377,8 +2387,8 @@ select:disabled {
   }
 
   .settlement-item {
-    padding: 16px;
-    grid-template-columns: 1fr;
+    padding: 10px 12px;
+    grid-template-columns: auto minmax(0, 1fr) auto;
   }
 
   .settlement-order {
@@ -2390,8 +2400,9 @@ select:disabled {
   }
 
   .settlement-amount {
-    font-size: 1.1rem;
-    justify-self: start;
+    font-size: 0.9rem;
+    padding: 5px 10px;
+    justify-self: end;
   }
 }
 

@@ -312,13 +312,12 @@
       return `
       <div class="summary-card-header">
         <div class="summary-person-name">${person}</div>
+        <div class="summary-balance-kicker ${balanceMeta.kickerClass}">${balanceMeta.label}</div>
       </div>
       <div class="summary-balance-row">
-        <div class="summary-balance-kicker ${balanceMeta.kickerClass}">${balanceMeta.label}</div>
         <div class="summary-value ${getBalanceClass(stats.balance)}">
-          ${formatAmount(Math.abs(stats.balance))}
+          ${formatAmount(Math.abs(stats.balance))}<span class="summary-value-unit"> บาท</span>
         </div>
-        <div class="summary-label">สุทธิหลังหักทุกบิล</div>
       </div>
             <hr class="summary-divider">
       <div class="summary-card-body">
